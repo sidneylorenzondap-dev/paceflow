@@ -1,0 +1,77 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id             String         @id @default(uuid())
+  email          String         @unique
+  weight         Float?
+  vo2Max         Float?
+  thresholdHr    Int?
+  createdAt      DateTime       @default(now())
+  trainingPlans  TrainingPlan[]
+  runSessions    RunSession[]
+  simulations    PredictiveSimulation[]
+}
+
+model TrainingPlan {
+  id            String   @id @default(uuid())
+  userId        String
+  targetDate    DateTime
+  goalTime      Int      // in seconds
+  goalDistance  Float    // in meters
+  user          User     @relation(fields: [userId], references: [id])
+}
+
+model Course {
+  id                  String         @id @default(uuid())
+  name                String
+  gpxData             Json
+  totalElevationGain  Float
+  heatIndexFactor     Float?
+  runSessions         RunSession[]
+  simulations         PredictiveSimulation[]
+}
+
+model RunSession {
+  id               String            @id @default(uuid())
+  userId           String
+  courseId         String
+  date             DateTime
+  totalTime        Int               // in seconds
+  avgPace          Float             // min/km or min/mile
+  user             User              @relation(fields: [userId], references: [id])
+  course           Course            @relation(fields: [courseId], references: [id])
+  telemetrySamples TelemetrySample[]
+}
+
+model TelemetrySample {
+  id                  String     @id @default(uuid())
+  sessionId           String
+  timestamp           BigInt     // ms precision
+  lat                 Float
+  lon                 Float
+  elevation           Float
+  cadence             Int?
+  gct                 Int?       // Ground Contact Time (ms)
+  verticalOscillation Float?
+  heartRate           Int?
+  runSession          RunSession @relation(fields: [sessionId], references: [id])
+
+  @@index([sessionId, timestamp])
+}
+
+model PredictiveSimulation {
+  id                  String   @id @default(uuid())
+  userId              String
+  courseId            String
+  scenarioParams      Json
+  probableFinishTime  Int      // in seconds
+  confidenceInterval  Float
+  user                User     @relation(fields: [userId], references: [id])
+  course              Course   @relation(fields: [courseId], references: [id])
+}
