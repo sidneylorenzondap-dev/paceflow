@@ -71,7 +71,7 @@ class LiveCoachingNotifier extends Notifier<LiveCoachingState> {
     state = state.copyWith(isRunning: true, latestCue: null);
     
     // Connect to local Node.js backend (use 10.0.2.2 for Android emulator if needed, localhost for Chrome)
-    const wsUrl = 'wss://paceflow-k48l.onrender.com/api/v1/live-coaching';
+    const wsUrl = 'wss://paceflow-node.onrender.com/api/v1/live-coaching';
     _channel = WebSocketChannel.connect(Uri.parse(wsUrl));
 
     _channel!.stream.listen((message) {
