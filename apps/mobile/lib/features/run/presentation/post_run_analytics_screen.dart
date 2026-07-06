@@ -90,37 +90,39 @@ class _PostRunAnalyticsScreenState extends State<PostRunAnalyticsScreen> {
             flex: 1,
             child: Container(
               padding: const EdgeInsets.all(20),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text("Fatigue Heatmap", style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.white)),
-                  const SizedBox(height: 10),
-                  Text("Red dots indicate where your cadence dropped and form degraded.", style: TextStyle(color: Colors.grey[400], fontSize: 16)),
-                  const SizedBox(height: 20),
-                  const Text("AI Recovery Coach", style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.white)),
-                  const SizedBox(height: 10),
-                  Container(
-                    padding: const EdgeInsets.all(15),
-                    decoration: BoxDecoration(
-                      color: Colors.grey[900],
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: Colors.blueAccent.withOpacity(0.3))
-                    ),
-                    child: FutureBuilder<String>(
-                      // In production, this would call GET /analytics/nutrition
-                      future: Future.delayed(const Duration(seconds: 2), () => "• 45g Carbs (e.g., 2 bananas or rice)\n• 1.2L Water with electrolytes\n• 20g Protein for muscle repair"),
-                      builder: (context, snapshot) {
-                        if (snapshot.connectionState == ConnectionState.waiting) {
-                          return const Center(child: CircularProgressIndicator());
+              child: SingleChildScrollView(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text("Fatigue Heatmap", style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.white)),
+                    const SizedBox(height: 10),
+                    Text("Red dots indicate where your cadence dropped and form degraded.", style: TextStyle(color: Colors.grey[400], fontSize: 16)),
+                    const SizedBox(height: 20),
+                    const Text("AI Recovery Coach", style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.white)),
+                    const SizedBox(height: 10),
+                    Container(
+                      padding: const EdgeInsets.all(15),
+                      decoration: BoxDecoration(
+                        color: Colors.grey[900],
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: Colors.blueAccent.withOpacity(0.3))
+                      ),
+                      child: FutureBuilder<String>(
+                        // In production, this would call GET /analytics/nutrition
+                        future: Future.delayed(const Duration(seconds: 2), () => "• 45g Carbs (e.g., 2 bananas or rice)\n• 1.2L Water with electrolytes\n• 20g Protein for muscle repair"),
+                        builder: (context, snapshot) {
+                          if (snapshot.connectionState == ConnectionState.waiting) {
+                            return const Center(child: CircularProgressIndicator());
+                          }
+                          return Text(
+                            snapshot.data ?? "Failed to load nutrition plan",
+                            style: const TextStyle(color: Colors.white, fontSize: 15, height: 1.5),
+                          );
                         }
-                        return Text(
-                          snapshot.data ?? "Failed to load nutrition plan",
-                          style: const TextStyle(color: Colors.white, fontSize: 15, height: 1.5),
-                        );
-                      }
-                    ),
-                  )
-                ],
+                      ),
+                    )
+                  ],
+                ),
               ),
             ),
           )
