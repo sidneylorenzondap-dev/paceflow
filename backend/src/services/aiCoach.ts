@@ -1,11 +1,12 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { FormAlert } from './formAnalyzer';
 
-const apiKey = process.env.GEMINI_API_KEY || '';
-const genAI = new GoogleGenerativeAI(apiKey);
-
 export class AiCoach {
-  private model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+  private get model() {
+    const apiKey = process.env.GEMINI_API_KEY || '';
+    const genAI = new GoogleGenerativeAI(apiKey);
+    return genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+  }
   private lastInterventionTime = 0;
   private cooldownMs = 30000; // 30 seconds between interventions
 
