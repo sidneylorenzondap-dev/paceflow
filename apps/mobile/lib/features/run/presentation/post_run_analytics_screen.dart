@@ -3,7 +3,7 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:mapbox_maps_flutter/mapbox_maps_flutter.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
-import '../../core/constants/api_constants.dart';
+import '../../../core/constants/api_constants.dart';
 
 class PostRunAnalyticsScreen extends StatefulWidget {
   final String geoJsonData;
