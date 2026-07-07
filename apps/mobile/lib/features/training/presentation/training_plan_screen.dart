@@ -5,7 +5,8 @@ import 'dart:convert';
 import '../../../core/constants/api_constants.dart';
 
 class TrainingPlanScreen extends StatefulWidget {
-  const TrainingPlanScreen({super.key});
+  final String goal;
+  const TrainingPlanScreen({super.key, required this.goal});
 
   @override
   State<TrainingPlanScreen> createState() => _TrainingPlanScreenState();
@@ -24,7 +25,8 @@ class _TrainingPlanScreenState extends State<TrainingPlanScreen> {
 
   Future<void> _fetchTrainingPlan() async {
     try {
-      final url = Uri.parse('${ApiConstants.baseUrl}/training/plan?goal=Sub-20+5K');
+      final encodedGoal = Uri.encodeComponent(widget.goal);
+      final url = Uri.parse('${ApiConstants.baseUrl}/training/plan?goal=$encodedGoal');
       final response = await http.get(url);
 
       if (response.statusCode == 200) {

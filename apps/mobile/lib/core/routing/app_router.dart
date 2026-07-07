@@ -28,7 +28,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: '/training',
-        builder: (context, state) => const TrainingPlanScreen(),
+        builder: (context, state) {
+          final goal = state.extra as String? ?? "Sub-20 5K";
+          return TrainingPlanScreen(goal: goal);
+        },
       ),
     ],
   );

@@ -45,6 +45,51 @@ class _DashboardScreenState extends State<DashboardScreen> {
     }
   }
 
+  void _showGoalDialog() {
+    String distance = '10km';
+    String pace = '5:30/km';
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          backgroundColor: Colors.grey[900],
+          title: const Text('Set Your Goal', style: TextStyle(color: Colors.white)),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                style: const TextStyle(color: Colors.white),
+                decoration: const InputDecoration(labelText: 'Distance (e.g., 7km, 21km)', labelStyle: TextStyle(color: Colors.grey)),
+                onChanged: (val) => distance = val,
+                controller: TextEditingController(text: distance),
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                style: const TextStyle(color: Colors.white),
+                decoration: const InputDecoration(labelText: 'Target Pace (e.g., 5:00/km)', labelStyle: TextStyle(color: Colors.grey)),
+                onChanged: (val) => pace = val,
+                controller: TextEditingController(text: pace),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('CANCEL', style: TextStyle(color: Colors.grey)),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.pop(context);
+                context.push('/training', extra: 'Distance: $distance, Target Pace: $pace');
+              },
+              child: const Text('GENERATE PLAN'),
+            ),
+          ],
+        );
+      }
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -137,12 +182,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 ),
               ),
               const SizedBox(height: 16),
-              // Training Plan Button
               SizedBox(
                 width: double.infinity,
                 height: 56,
                 child: ElevatedButton.icon(
-                  onPressed: () => context.push('/training'),
+                  onPressed: _showGoalDialog,
                   icon: const Icon(Icons.calendar_month, color: Colors.white),
                   label: const Text(
                     'AI TRAINING PLAN',

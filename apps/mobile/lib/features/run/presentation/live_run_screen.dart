@@ -67,16 +67,33 @@ class _LiveRunScreenState extends ConsumerState<LiveRunScreen> {
               
               const Spacer(),
               
-              // Big Timer / Pace
+              // Big Timer / Distance
               Text(
-                '4:30',
+                '1.24',
                 style: Theme.of(context).textTheme.displayLarge?.copyWith(
                   fontSize: 84,
                   letterSpacing: -2,
                 ),
               ),
               const Text(
-                'TARGET PACE / KM',
+                'KILOMETERS',
+                style: TextStyle(
+                  color: Colors.grey,
+                  letterSpacing: 2,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 24),
+              Text(
+                '06:45',
+                style: Theme.of(context).textTheme.displayMedium?.copyWith(
+                  fontSize: 48,
+                  letterSpacing: -1,
+                  color: Theme.of(context).colorScheme.primary,
+                ),
+              ),
+              const Text(
+                'ELAPSED TIME',
                 style: TextStyle(
                   color: Colors.grey,
                   letterSpacing: 2,
@@ -91,8 +108,8 @@ class _LiveRunScreenState extends ConsumerState<LiveRunScreen> {
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
                   _buildMetric('HR', '${state.telemetry.heartRate}', 'BPM'),
+                  _buildMetric('PACE', '5:20', '/KM'),
                   _buildMetric('CAD', '${state.telemetry.cadence}', 'SPM'),
-                  _buildMetric('GCT', '${state.telemetry.gct}', 'MS'),
                 ],
               ),
               

@@ -25,13 +25,20 @@ class _PostRunAnalyticsScreenState extends State<PostRunAnalyticsScreen> {
     _nutritionPlanFuture = _fetchNutritionPlan(selectedDiet);
   }
 
+  Map<String, String> _nutritionCache = {};
+
   Future<String> _fetchNutritionPlan(String diet) async {
+    if (_nutritionCache.containsKey(diet)) {
+      return _nutritionCache[diet]!;
+    }
     try {
       final url = Uri.parse('${ApiConstants.baseUrl}/analytics/nutrition?diet=$diet');
       final response = await http.get(url);
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        return data['plan'] ?? 'No plan received.';
+        final plan = data['plan'] ?? 'No plan received.';
+        _nutritionCache[diet] = plan;
+        return plan;
       } else {
         return 'Failed to load plan: ${response.statusCode}';
       }

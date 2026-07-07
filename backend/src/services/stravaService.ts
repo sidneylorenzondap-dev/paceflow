@@ -5,7 +5,7 @@ import crypto from 'crypto';
 export const importLatestStravaRun = async (): Promise<any> => {
   const token = process.env.STRAVA_ACCESS_TOKEN || '';
 
-  if (token === 'YOUR_MOCK_STRAVA_KEY_HERE') {
+  if (process.env.MOCK_MODE === 'true') {
     // Generate a beautiful mock 5K run geojson with heat/fatigue data
     const coordinates = [];
     const heartRates = [];
