@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:http/http.dart' as http;
-import '../../core/constants/api_constants.dart';
+import '../../../core/constants/api_constants.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
