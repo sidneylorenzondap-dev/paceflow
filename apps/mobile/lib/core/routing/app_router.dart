@@ -20,7 +20,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: '/analytics',
-        builder: (context, state) => const PostRunAnalyticsScreen(geoJsonData: "{}"),
+        builder: (context, state) {
+          final geoJsonData = state.extra as String? ?? "{}";
+          return PostRunAnalyticsScreen(geoJsonData: geoJsonData);
+        },
       ),
     ],
   );

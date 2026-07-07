@@ -1,8 +1,49 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:http/http.dart' as http;
+import '../../core/constants/api_constants.dart';
 
-class DashboardScreen extends StatelessWidget {
+class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
+
+  @override
+  State<DashboardScreen> createState() => _DashboardScreenState();
+}
+
+class _DashboardScreenState extends State<DashboardScreen> {
+  bool _isLoadingStrava = false;
+
+  Future<void> _importFromStrava() async {
+    setState(() {
+      _isLoadingStrava = true;
+    });
+
+    try {
+      final url = Uri.parse('${ApiConstants.baseUrl}/strava/import');
+      final response = await http.get(url);
+      
+      setState(() {
+        _isLoadingStrava = false;
+      });
+
+      if (response.statusCode == 200) {
+        if (mounted) {
+          context.push('/analytics', extra: response.body);
+        }
+      } else {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed to import Strava run: ${response.statusCode}')));
+        }
+      }
+    } catch (e) {
+      setState(() {
+        _isLoadingStrava = false;
+      });
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Network error: $e')));
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -72,6 +113,21 @@ class DashboardScreen extends StatelessWidget {
 
               const Spacer(),
               
+              ElevatedButton.icon(
+                onPressed: _isLoadingStrava ? null : _importFromStrava,
+                icon: _isLoadingStrava 
+                  ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                  : const Icon(Icons.sync_rounded),
+                label: const Text('IMPORT FROM STRAVA'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFFFC4C02), // Strava orange
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(vertical: 20),
+                ),
+              ),
+              
+              const SizedBox(height: 16),
+
               ElevatedButton.icon(
                 onPressed: () => context.push('/run'),
                 icon: const Icon(Icons.play_arrow_rounded),

@@ -8,6 +8,7 @@ import courseRoutes from './api/courses';
 import pacingRoutes from './api/pacing';
 import simulationRoutes from './api/simulations';
 import analyticsRoutes from './api/analytics';
+import stravaRoutes from './api/strava';
 import { setupLiveCoachingSocket } from './api/liveCoaching';
 
 dotenv.config();
@@ -25,6 +26,7 @@ app.use('/api/v1/courses', courseRoutes);
 app.use('/api/v1/pacing', pacingRoutes);
 app.use('/api/v1/simulations', simulationRoutes);
 app.use('/api/v1/analytics', analyticsRoutes);
+app.use('/api/v1/strava', stravaRoutes);
 
 app.get('/health', (req, res) => {
   res.status(200).json({ status: 'ok' });
