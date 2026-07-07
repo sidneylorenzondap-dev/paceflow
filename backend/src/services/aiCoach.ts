@@ -47,21 +47,48 @@ export class AiCoach {
   public async generateNutritionPlan(durationSecs: number, distanceMeters: number, heatIndex: number, dietPreference: string = 'Standard'): Promise<string> {
     try {
       const kcalBurned = (durationSecs / 60) * 12; // Rough estimate: 12 kcal per min
-      const sweatLossLiters = (durationSecs / 3600) * (heatIndex > 80 ? 1.5 : 0.8); // 1.5L/hr if hot
+      const sweatLossLiters = (durationSecs / 3600) * (0.5 + (heatIndex * 0.05));
 
-      const prompt = `You are an elite sports nutritionist. A runner just finished a run lasting ${Math.round(durationSecs / 60)} minutes, covering ${distanceMeters} meters in ${heatIndex}°F heat. 
-      Estimated calorie burn: ${Math.round(kcalBurned)} kcal. Estimated sweat loss: ${sweatLossLiters.toFixed(1)} Liters.
-      The runner's dietary preference is: **${dietPreference}**.
-      
-      Provide exactly 3 different personalized post-run recovery meal options that STRICTLY adhere to the ${dietPreference} diet. 
-      Also include a brief hydration recommendation.
-      Format your response beautifully using markdown bullet points and bold text for the meal titles. Do not include any intro or outro fluff.`;
-      
+      const prompt = `
+        Act as an elite sports nutritionist. The user just completed a ${distanceMeters}m run in ${Math.round(durationSecs / 60)} minutes.
+        The current heat index during their run was a factor of ${heatIndex}.
+        Estimated calories burned: ${Math.round(kcalBurned)} kcal.
+        Estimated fluid loss: ${sweatLossLiters.toFixed(2)} Liters.
+        Dietary Preference: ${dietPreference}.
+
+        Provide EXACTLY 3 hyper-personalized recovery meal options based on their dietary preference.
+        Keep each option to one short sentence. Format as a bulleted list.
+      `;
+
       const result = await this.model.generateContent(prompt);
-      return result.response.text().trim();
-    } catch (error) {
-      console.error('Gemini Nutrition Error:', error);
-      return "Unable to generate nutrition plan at this time. Drink water and eat some carbs!";
+      return result.response.text();
+    } catch (e) {
+      console.error('[AiCoach] Nutrition generation failed', e);
+      return 'Failed to generate nutrition plan. Hydrate and eat balanced macros.';
+    }
+  }
+
+  public async generateTrainingPlan(goal: string, history: any[]): Promise<string> {
+    try {
+      const historyContext = history.length > 0 
+        ? `Here is their recent run history: ${JSON.stringify(history)}` 
+        : `They have no recent run history recorded.`;
+
+      const prompt = `
+        Act as an elite Olympic running coach. The user wants a 1-week micro-cycle training plan.
+        Their goal is: ${goal}.
+        ${historyContext}
+
+        Generate a personalized 7-day plan (Monday-Sunday).
+        If their history shows low cadence or high heart rate, recommend specific drills to address it.
+        Keep it concise, actionable, and formatted as a Markdown list.
+      `;
+
+      const result = await this.model.generateContent(prompt);
+      return result.response.text();
+    } catch (e) {
+      console.error('[AiCoach] Training plan generation failed', e);
+      return 'Failed to generate training plan. Please rest and try again tomorrow.';
     }
   }
 }

@@ -110,23 +110,57 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   ],
                 ),
               ),
-
-              const Spacer(),
-              
-              ElevatedButton.icon(
-                onPressed: _isLoadingStrava ? null : _importFromStrava,
-                icon: _isLoadingStrava 
-                  ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                  : const Icon(Icons.sync_rounded),
-                label: const Text('IMPORT FROM STRAVA'),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFFFC4C02), // Strava orange
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(vertical: 20),
+              const SizedBox(height: 16),
+              SizedBox(
+                width: double.infinity,
+                height: 56,
+                child: ElevatedButton.icon(
+                  onPressed: _isLoadingStrava ? null : _importFromStrava,
+                  icon: _isLoadingStrava 
+                    ? const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                    : const Icon(Icons.sync, color: Colors.white),
+                  label: Text(
+                    _isLoadingStrava ? 'IMPORTING...' : 'IMPORT FROM STRAVA',
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      letterSpacing: 1.2,
+                      color: Colors.white,
+                    ),
+                  ),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFFFC4C02), // Strava Orange
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                  ),
                 ),
               ),
-              
               const SizedBox(height: 16),
+              // Training Plan Button
+              SizedBox(
+                width: double.infinity,
+                height: 56,
+                child: ElevatedButton.icon(
+                  onPressed: () => context.push('/training'),
+                  icon: const Icon(Icons.calendar_month, color: Colors.white),
+                  label: const Text(
+                    'AI TRAINING PLAN',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      letterSpacing: 1.2,
+                      color: Colors.white,
+                    ),
+                  ),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF4A90E2), // Nice Blue
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                  ),
+                ),
+              ),const SizedBox(height: 16),
 
               ElevatedButton.icon(
                 onPressed: () => context.push('/run'),

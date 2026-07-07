@@ -1,3 +1,7 @@
+import { TelemetrySamplePayload } from './telemetryService';
+import { db, RunRecord } from './mockDb';
+import crypto from 'crypto';
+
 export const importLatestStravaRun = async (): Promise<any> => {
   const token = process.env.STRAVA_ACCESS_TOKEN || '';
 
@@ -26,6 +30,17 @@ export const importLatestStravaRun = async (): Promise<any> => {
 
       times.push(Date.now() - (300 - i) * 1000);
     }
+
+    const record: RunRecord = {
+      id: crypto.randomUUID(),
+      date: new Date().toISOString(),
+      distanceMeters: 5000,
+      durationSecs: 300,
+      avgHeartRate: Math.round(heartRates.reduce((a, b) => a + b, 0) / heartRates.length),
+      avgCadence: Math.round(cadences.reduce((a, b) => a + b, 0) / cadences.length),
+      source: 'Strava'
+    };
+    db.saveRun(record);
 
     return {
       type: "FeatureCollection",
