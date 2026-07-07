@@ -14,9 +14,10 @@ router.get('/nutrition', async (req, res) => {
     const distanceMeters = Number(req.query.distanceMeters) || 5000; // default 5k
     const lat = Number(req.query.lat) || 0;
     const lon = Number(req.query.lon) || 0;
+    const diet = (req.query.diet as string) || 'Standard';
 
     const weather = await getWeatherDataForCourse(lat, lon);
-    const plan = await coach.generateNutritionPlan(durationSecs, distanceMeters, weather.heatIndex);
+    const plan = await coach.generateNutritionPlan(durationSecs, distanceMeters, weather.heatIndex, diet);
     
     res.json({ plan });
   } catch (error) {

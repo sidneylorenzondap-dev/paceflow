@@ -42,6 +42,7 @@ dependencies:
   health: ^13.3.1
   mapbox_maps_flutter: ^2.25.1
   web_socket_channel: ^3.0.3
+  http: ^1.2.1
 
 dev_dependencies:
   flutter_test:

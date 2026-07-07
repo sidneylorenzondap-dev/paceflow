@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:mapbox_maps_flutter/mapbox_maps_flutter.dart';
+import 'dart:convert';
+import 'package:http/http.dart' as http;
+import '../../core/constants/api_constants.dart';
 
 class PostRunAnalyticsScreen extends StatefulWidget {
   final String geoJsonData;
@@ -13,6 +16,29 @@ class PostRunAnalyticsScreen extends StatefulWidget {
 
 class _PostRunAnalyticsScreenState extends State<PostRunAnalyticsScreen> {
   MapboxMap? mapboxMap;
+  String selectedDiet = 'Standard';
+  late Future<String> _nutritionPlanFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    _nutritionPlanFuture = _fetchNutritionPlan(selectedDiet);
+  }
+
+  Future<String> _fetchNutritionPlan(String diet) async {
+    try {
+      final url = Uri.parse('${ApiConstants.baseUrl}/analytics/nutrition?diet=$diet');
+      final response = await http.get(url);
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        return data['plan'] ?? 'No plan received.';
+      } else {
+        return 'Failed to load plan: ${response.statusCode}';
+      }
+    } catch (e) {
+      return 'Network error: $e';
+    }
+  }
 
   _onMapCreated(MapboxMap mapboxMap) {
     this.mapboxMap = mapboxMap;
@@ -100,6 +126,36 @@ class _PostRunAnalyticsScreenState extends State<PostRunAnalyticsScreen> {
                     const SizedBox(height: 20),
                     const Text("AI Recovery Coach", style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.white)),
                     const SizedBox(height: 10),
+                    SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      child: Row(
+                        children: ['Standard', 'Vegan', 'Keto', 'High-Protein'].map((diet) {
+                          return Padding(
+                            padding: const EdgeInsets.only(right: 8.0),
+                            child: ChoiceChip(
+                              label: Text(diet),
+                              selected: selectedDiet == diet,
+                              onSelected: (bool selected) {
+                                if (selected) {
+                                  setState(() {
+                                    selectedDiet = diet;
+                                    _nutritionPlanFuture = _fetchNutritionPlan(diet);
+                                  });
+                                }
+                              },
+                              selectedColor: Colors.blueAccent.withOpacity(0.3),
+                              backgroundColor: Colors.grey[900],
+                              labelStyle: TextStyle(color: selectedDiet == diet ? Colors.blueAccent : Colors.grey),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(20),
+                                side: BorderSide(color: selectedDiet == diet ? Colors.blueAccent : Colors.grey[800]!),
+                              ),
+                            ),
+                          );
+                        }).toList(),
+                      ),
+                    ),
+                    const SizedBox(height: 15),
                     Container(
                       padding: const EdgeInsets.all(15),
                       decoration: BoxDecoration(
@@ -108,11 +164,13 @@ class _PostRunAnalyticsScreenState extends State<PostRunAnalyticsScreen> {
                         border: Border.all(color: Colors.blueAccent.withOpacity(0.3))
                       ),
                       child: FutureBuilder<String>(
-                        // In production, this would call GET /analytics/nutrition
-                        future: Future.delayed(const Duration(seconds: 2), () => "• 45g Carbs (e.g., 2 bananas or rice)\n• 1.2L Water with electrolytes\n• 20g Protein for muscle repair"),
+                        future: _nutritionPlanFuture,
                         builder: (context, snapshot) {
                           if (snapshot.connectionState == ConnectionState.waiting) {
-                            return const Center(child: CircularProgressIndicator());
+                            return const Center(child: Padding(padding: EdgeInsets.all(20), child: CircularProgressIndicator()));
+                          }
+                          if (snapshot.hasError) {
+                            return Text("Error: ${snapshot.error}", style: const TextStyle(color: Colors.red));
                           }
                           return Text(
                             snapshot.data ?? "Failed to load nutrition plan",

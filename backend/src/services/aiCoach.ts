@@ -43,14 +43,18 @@ export class AiCoach {
     }
   }
 
-  public async generateNutritionPlan(durationSecs: number, distanceMeters: number, heatIndex: number): Promise<string> {
+  public async generateNutritionPlan(durationSecs: number, distanceMeters: number, heatIndex: number, dietPreference: string = 'Standard'): Promise<string> {
     try {
       const kcalBurned = (durationSecs / 60) * 12; // Rough estimate: 12 kcal per min
       const sweatLossLiters = (durationSecs / 3600) * (heatIndex > 80 ? 1.5 : 0.8); // 1.5L/hr if hot
 
-      const prompt = `You are a sports nutritionist. A runner just finished a run lasting ${Math.round(durationSecs / 60)} minutes, covering ${distanceMeters} meters in ${heatIndex}°F heat. 
+      const prompt = `You are an elite sports nutritionist. A runner just finished a run lasting ${Math.round(durationSecs / 60)} minutes, covering ${distanceMeters} meters in ${heatIndex}°F heat. 
       Estimated calorie burn: ${Math.round(kcalBurned)} kcal. Estimated sweat loss: ${sweatLossLiters.toFixed(1)} Liters.
-      Provide a brief, personalized post-run recovery grocery list and hydration plan (bullet points).`;
+      The runner's dietary preference is: **${dietPreference}**.
+      
+      Provide exactly 3 different personalized post-run recovery meal options that STRICTLY adhere to the ${dietPreference} diet. 
+      Also include a brief hydration recommendation.
+      Format your response beautifully using markdown bullet points and bold text for the meal titles. Do not include any intro or outro fluff.`;
       
       const result = await this.model.generateContent(prompt);
       return result.response.text().trim();
