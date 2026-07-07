@@ -5,7 +5,7 @@ export class AiCoach {
   private get model() {
     const apiKey = process.env.GEMINI_API_KEY || '';
     const genAI = new GoogleGenerativeAI(apiKey);
-    return genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+    return genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
   }
   private lastInterventionTime = 0;
   private cooldownMs = 30000; // 30 seconds between interventions
