@@ -68,8 +68,18 @@ export class AiCoach {
     }
   }
 
+  private planCache: Map<string, string> = new Map();
+
   public async generateTrainingPlan(goal: string, history: any[]): Promise<string> {
     try {
+      const historyHash = history.map(h => h.id).join(',');
+      const cacheKey = `${goal}_${historyHash}`;
+      
+      if (this.planCache.has(cacheKey)) {
+        console.log('[AiCoach] Returning cached training plan to save API credits');
+        return this.planCache.get(cacheKey)!;
+      }
+
       const historyContext = history.length > 0 
         ? `Here is their recent run history: ${JSON.stringify(history)}` 
         : `They have no recent run history recorded.`;
@@ -79,13 +89,17 @@ export class AiCoach {
         Their goal is: ${goal}.
         ${historyContext}
 
-        Generate a personalized 7-day plan (Monday-Sunday).
+        First, analyze if their goal is realistic based on their history. If it's highly unrealistic (e.g. asking for a 2-hour marathon but their 5K pace is very slow), gently tell them it might take longer, but provide a step-up plan anyway to start their journey.
+        Then, generate a personalized 7-day plan (Monday-Sunday).
         If their history shows low cadence or high heart rate, recommend specific drills to address it.
         Keep it concise, actionable, and formatted as a Markdown list.
       `;
 
       const result = await this.model.generateContent(prompt);
-      return result.response.text();
+      const generatedPlan = result.response.text();
+      
+      this.planCache.set(cacheKey, generatedPlan);
+      return generatedPlan;
     } catch (e) {
       console.error('[AiCoach] Training plan generation failed', e);
       return 'Failed to generate training plan. Please rest and try again tomorrow.';

@@ -45,48 +45,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
     }
   }
 
-  void _showGoalDialog() {
-    String distance = '10km';
-    String pace = '5:30/km';
-    showDialog(
+  void _showGoalBottomSheet() {
+    showModalBottomSheet(
       context: context,
-      builder: (context) {
-        return AlertDialog(
-          backgroundColor: Colors.grey[900],
-          title: const Text('Set Your Goal', style: TextStyle(color: Colors.white)),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(
-                style: const TextStyle(color: Colors.white),
-                decoration: const InputDecoration(labelText: 'Distance (e.g., 7km, 21km)', labelStyle: TextStyle(color: Colors.grey)),
-                onChanged: (val) => distance = val,
-                controller: TextEditingController(text: distance),
-              ),
-              const SizedBox(height: 16),
-              TextField(
-                style: const TextStyle(color: Colors.white),
-                decoration: const InputDecoration(labelText: 'Target Pace (e.g., 5:00/km)', labelStyle: TextStyle(color: Colors.grey)),
-                onChanged: (val) => pace = val,
-                controller: TextEditingController(text: pace),
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('CANCEL', style: TextStyle(color: Colors.grey)),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                Navigator.pop(context);
-                context.push('/training', extra: 'Distance: $distance, Target Pace: $pace');
-              },
-              child: const Text('GENERATE PLAN'),
-            ),
-          ],
-        );
-      }
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => const GoalSelectionBottomSheet(),
     );
   }
 
@@ -186,7 +150,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 width: double.infinity,
                 height: 56,
                 child: ElevatedButton.icon(
-                  onPressed: _showGoalDialog,
+                  onPressed: _showGoalBottomSheet,
                   icon: const Icon(Icons.calendar_month, color: Colors.white),
                   label: const Text(
                     'AI TRAINING PLAN',
@@ -217,6 +181,158 @@ class _DashboardScreenState extends State<DashboardScreen> {
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+class GoalSelectionBottomSheet extends StatefulWidget {
+  const GoalSelectionBottomSheet({super.key});
+
+  @override
+  State<GoalSelectionBottomSheet> createState() => _GoalSelectionBottomSheetState();
+}
+
+class _GoalSelectionBottomSheetState extends State<GoalSelectionBottomSheet> {
+  String _selectedDistance = '10K';
+  double _paceSeconds = 330; // 5:30/km in seconds
+
+  final List<String> _distances = ['5K', '10K', 'Half Marathon', 'Marathon'];
+
+  String get _formattedPace {
+    final minutes = (_paceSeconds / 60).floor();
+    final seconds = (_paceSeconds % 60).floor().toString().padLeft(2, '0');
+    return '$minutes:$seconds /km';
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: const Color(0xFF1A1A1A),
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+        border: Border.all(color: Colors.white10),
+      ),
+      padding: const EdgeInsets.only(top: 8, left: 24, right: 24, bottom: 40),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Center(
+            child: Container(
+              width: 40,
+              height: 4,
+              margin: const EdgeInsets.only(bottom: 24),
+              decoration: BoxDecoration(
+                color: Colors.grey[700],
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+          ),
+          const Text(
+            'Target Event',
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
+          ),
+          const SizedBox(height: 16),
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(
+              children: _distances.map((dist) {
+                final isSelected = _selectedDistance == dist;
+                return Padding(
+                  padding: const EdgeInsets.only(right: 8.0),
+                  child: ChoiceChip(
+                    label: Text(dist),
+                    selected: isSelected,
+                    onSelected: (selected) {
+                      if (selected) setState(() => _selectedDistance = dist);
+                    },
+                    selectedColor: const Color(0xFFFC4C02).withOpacity(0.2),
+                    backgroundColor: Colors.grey[900],
+                    labelStyle: TextStyle(
+                      color: isSelected ? const Color(0xFFFC4C02) : Colors.grey,
+                      fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(20),
+                      side: BorderSide(
+                        color: isSelected ? const Color(0xFFFC4C02) : Colors.grey[800]!,
+                      ),
+                    ),
+                  ),
+                );
+              }).toList(),
+            ),
+          ),
+          const SizedBox(height: 32),
+          const Text(
+            'Target Pace',
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
+          ),
+          const SizedBox(height: 24),
+          Center(
+            child: Text(
+              _formattedPace,
+              style: const TextStyle(
+                fontSize: 48,
+                fontWeight: FontWeight.bold,
+                color: Color(0xFFFC4C02),
+                letterSpacing: -1,
+              ),
+            ),
+          ),
+          const SizedBox(height: 16),
+          SliderTheme(
+            data: SliderThemeData(
+              activeTrackColor: const Color(0xFFFC4C02),
+              inactiveTrackColor: Colors.grey[800],
+              thumbColor: Colors.white,
+              overlayColor: const Color(0xFFFC4C02).withOpacity(0.2),
+              trackHeight: 8.0,
+            ),
+            child: Slider(
+              value: _paceSeconds,
+              min: 210, // 3:30/km
+              max: 480, // 8:00/km
+              onChanged: (val) {
+                setState(() {
+                  _paceSeconds = val;
+                });
+              },
+            ),
+          ),
+          const SizedBox(height: 8),
+          const Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text('3:30/km', style: TextStyle(color: Colors.grey, fontSize: 12)),
+              Text('8:00/km', style: TextStyle(color: Colors.grey, fontSize: 12)),
+            ],
+          ),
+          const SizedBox(height: 32),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(context);
+              context.push('/training', extra: 'Distance: $_selectedDistance, Target Pace: $_formattedPace');
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF4A90E2),
+              padding: const EdgeInsets.symmetric(vertical: 16),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
+            ),
+            child: const Text(
+              'GENERATE AI PLAN',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+                letterSpacing: 1.2,
+                color: Colors.white,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
