@@ -11,7 +11,6 @@ class LiveRunScreen extends ConsumerStatefulWidget {
 }
 
 class _LiveRunScreenState extends ConsumerState<LiveRunScreen> {
-  bool _isGhostRacing = false;
   bool _isPaused = false;
 
   @override
@@ -152,29 +151,11 @@ class _LiveRunScreenState extends ConsumerState<LiveRunScreen> {
                 const SizedBox(height: 104), // Space placeholder
               
               if (!state.isRunning)
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const Icon(Icons.group_outlined, color: Colors.grey),
-                    const SizedBox(width: 8),
-                    const Text('Race a Ghost', style: TextStyle(color: Colors.white, fontSize: 16)),
-                    Switch(
-                      value: _isGhostRacing,
-                      activeColor: Theme.of(context).colorScheme.primary,
-                      onChanged: (val) {
-                        setState(() {
-                          _isGhostRacing = val;
-                        });
-                      },
-                    ),
-                  ],
-                ),
-              const SizedBox(height: 16),
-              if (!state.isRunning)
                 FloatingActionButton.large(
                   onPressed: () {
                     setState(() { _isPaused = false; });
-                    notifier.startRun(isGhostRace: _isGhostRacing);
+                    // Pass isGhostRace from extra or provider in real app, currently default to false or handle later
+                    notifier.startRun(isGhostRace: false);
                   },
                   backgroundColor: Theme.of(context).colorScheme.primary,
                   foregroundColor: Colors.black,

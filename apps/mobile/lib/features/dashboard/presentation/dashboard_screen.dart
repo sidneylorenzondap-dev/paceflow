@@ -54,6 +54,15 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
+  void _showPreRunSetupBottomSheet() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => const PreRunSetupBottomSheet(),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -171,7 +180,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               ),const SizedBox(height: 16),
 
               ElevatedButton.icon(
-                onPressed: () => context.push('/run'),
+                onPressed: _showPreRunSetupBottomSheet,
                 icon: const Icon(Icons.play_arrow_rounded),
                 label: const Text('START RUN'),
                 style: ElevatedButton.styleFrom(
@@ -329,6 +338,183 @@ class _GoalSelectionBottomSheetState extends State<GoalSelectionBottomSheet> {
                 fontWeight: FontWeight.bold,
                 letterSpacing: 1.2,
                 color: Colors.white,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class PreRunSetupBottomSheet extends StatefulWidget {
+  const PreRunSetupBottomSheet({super.key});
+
+  @override
+  State<PreRunSetupBottomSheet> createState() => _PreRunSetupBottomSheetState();
+}
+
+class _PreRunSetupBottomSheetState extends State<PreRunSetupBottomSheet> {
+  double _paceSeconds = 360; // 6:00/km in seconds
+  String _strictness = 'Standard';
+  bool _isGhostRacing = false;
+
+  final List<String> _strictnessLevels = ['Strict (Race)', 'Standard', 'Relaxed'];
+
+  String get _formattedPace {
+    final minutes = (_paceSeconds / 60).floor();
+    final seconds = (_paceSeconds % 60).floor().toString().padLeft(2, '0');
+    return '$minutes:$seconds /km';
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: const Color(0xFF1A1A1A),
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+        border: Border.all(color: Colors.white10),
+      ),
+      padding: const EdgeInsets.only(top: 8, left: 24, right: 24, bottom: 40),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Center(
+            child: Container(
+              width: 40,
+              height: 4,
+              margin: const EdgeInsets.only(bottom: 24),
+              decoration: BoxDecoration(
+                color: Colors.grey[700],
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+          ),
+          const Text(
+            "Today's Workout",
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 32),
+          
+          const Text(
+            'Target Pace',
+            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
+          ),
+          const SizedBox(height: 16),
+          Center(
+            child: Text(
+              _formattedPace,
+              style: const TextStyle(
+                fontSize: 48,
+                fontWeight: FontWeight.bold,
+                color: Color(0xFFFC4C02),
+                letterSpacing: -1,
+              ),
+            ),
+          ),
+          const SizedBox(height: 8),
+          SliderTheme(
+            data: SliderThemeData(
+              activeTrackColor: const Color(0xFFFC4C02),
+              inactiveTrackColor: Colors.grey[800],
+              thumbColor: Colors.white,
+              overlayColor: const Color(0xFFFC4C02).withOpacity(0.2),
+              trackHeight: 8.0,
+            ),
+            child: Slider(
+              value: _paceSeconds,
+              min: 210, // 3:30/km
+              max: 480, // 8:00/km
+              onChanged: (val) {
+                setState(() {
+                  _paceSeconds = val;
+                });
+              },
+            ),
+          ),
+          const SizedBox(height: 32),
+          
+          const Text(
+            'AI Coach Strictness',
+            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
+          ),
+          const SizedBox(height: 16),
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(
+              children: _strictnessLevels.map((level) {
+                final isSelected = _strictness == level;
+                return Padding(
+                  padding: const EdgeInsets.only(right: 8.0),
+                  child: ChoiceChip(
+                    label: Text(level),
+                    selected: isSelected,
+                    onSelected: (selected) {
+                      if (selected) setState(() => _strictness = level);
+                    },
+                    selectedColor: const Color(0xFF4A90E2).withOpacity(0.2),
+                    backgroundColor: Colors.grey[900],
+                    labelStyle: TextStyle(
+                      color: isSelected ? const Color(0xFF4A90E2) : Colors.grey,
+                      fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(20),
+                      side: BorderSide(
+                        color: isSelected ? const Color(0xFF4A90E2) : Colors.grey[800]!,
+                      ),
+                    ),
+                  ),
+                );
+              }).toList(),
+            ),
+          ),
+          const SizedBox(height: 24),
+          
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Row(
+                children: [
+                  Icon(Icons.group_outlined, color: Colors.grey),
+                  SizedBox(width: 12),
+                  Text('Race a Ghost', style: TextStyle(color: Colors.white, fontSize: 16)),
+                ],
+              ),
+              Switch(
+                value: _isGhostRacing,
+                activeColor: const Color(0xFFFC4C02),
+                onChanged: (val) {
+                  setState(() {
+                    _isGhostRacing = val;
+                  });
+                },
+              ),
+            ],
+          ),
+          
+          const SizedBox(height: 32),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(context);
+              context.push('/run');
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Theme.of(context).colorScheme.primary,
+              padding: const EdgeInsets.symmetric(vertical: 20),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
+            ),
+            child: const Text(
+              'START GPS',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                letterSpacing: 1.2,
+                color: Colors.black,
               ),
             ),
           ),
