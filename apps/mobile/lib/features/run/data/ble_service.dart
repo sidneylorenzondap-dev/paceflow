@@ -59,13 +59,16 @@ class BleNotifier extends Notifier<BleState> {
 
   Future<void> stopScan() async {
     await FlutterBluePlus.stopScan();
+    _scanSubscription?.cancel();
+    _scanSubscription = null;
     state = state.copyWith(isScanning: false);
   }
 
   Future<void> connectToDevice(BluetoothDevice device) async {
     await stopScan();
     try {
-      await device.connect();
+      // flutter_blue_plus 2.x requires license
+      await device.connect(license: License.nonprofit);
       state = state.copyWith(connectedDevice: device);
       _discoverHeartRateService(device);
     } catch (e) {

@@ -350,11 +350,11 @@ class _GoalSelectionBottomSheetState extends State<GoalSelectionBottomSheet> {
   }
 }
 
-class PreRunSetupBottomSheet extends StatefulWidget {
+class PreRunSetupBottomSheet extends ConsumerStatefulWidget {
   const PreRunSetupBottomSheet({super.key});
 
   @override
-  State<PreRunSetupBottomSheet> createState() => _PreRunSetupBottomSheetState();
+  ConsumerState<PreRunSetupBottomSheet> createState() => _PreRunSetupBottomSheetState();
 }
 
 class _PreRunSetupBottomSheetState extends ConsumerState<PreRunSetupBottomSheet> {
