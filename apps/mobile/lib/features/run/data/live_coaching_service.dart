@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
 import 'package:flutter_tts/flutter_tts.dart';
-import '../../core/constants/api_constants.dart';
+import '../../../core/constants/api_constants.dart';
 
 class TelemetryData {
   final int heartRate;
