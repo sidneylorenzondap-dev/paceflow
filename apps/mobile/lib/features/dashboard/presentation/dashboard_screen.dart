@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:http/http.dart' as http;
 import '../../../core/constants/api_constants.dart';
+import '../../run/presentation/device_scanner_screen.dart';
+import '../../run/data/ble_service.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -354,7 +357,7 @@ class PreRunSetupBottomSheet extends StatefulWidget {
   State<PreRunSetupBottomSheet> createState() => _PreRunSetupBottomSheetState();
 }
 
-class _PreRunSetupBottomSheetState extends State<PreRunSetupBottomSheet> {
+class _PreRunSetupBottomSheetState extends ConsumerState<PreRunSetupBottomSheet> {
   String _selectedDistance = '5K';
   double _paceSeconds = 360; // 6:00/km in seconds
   String _strictness = 'Standard';
@@ -506,6 +509,48 @@ class _PreRunSetupBottomSheetState extends State<PreRunSetupBottomSheet> {
             ),
           ),
           const SizedBox(height: 24),
+          
+          InkWell(
+            onTap: () {
+              showModalBottomSheet(
+                context: context,
+                isScrollControlled: true,
+                backgroundColor: Colors.transparent,
+                builder: (context) => const DeviceScannerScreen(),
+              );
+            },
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 8.0),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Row(
+                    children: [
+                      Icon(Icons.bluetooth, color: Colors.grey),
+                      SizedBox(width: 12),
+                      Text('Sensors', style: TextStyle(color: Colors.white, fontSize: 16)),
+                    ],
+                  ),
+                  Consumer(
+                    builder: (context, ref, _) {
+                      final bleState = ref.watch(bleProvider);
+                      final status = bleState.connectedDevice != null 
+                        ? bleState.connectedDevice!.platformName 
+                        : '[ None Connected ]';
+                      return Text(
+                        status,
+                        style: TextStyle(
+                          color: bleState.connectedDevice != null ? Colors.green : Colors.grey,
+                          fontSize: 14,
+                        ),
+                      );
+                    },
+                  ),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 16),
           
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,

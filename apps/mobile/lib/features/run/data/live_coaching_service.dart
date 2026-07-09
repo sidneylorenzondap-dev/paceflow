@@ -3,19 +3,27 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
 import 'package:flutter_tts/flutter_tts.dart';
 import '../../../core/constants/api_constants.dart';
+import 'ble_service.dart';
 
 class TelemetryData {
   final int heartRate;
   final int cadence;
-  final int gct;
+  final double groundContactTime;
+  final double verticalOscillation;
 
-  TelemetryData({this.heartRate = 0, this.cadence = 0, this.gct = 0});
+  TelemetryData({
+    this.heartRate = 0, 
+    this.cadence = 0, 
+    this.groundContactTime = 0.0,
+    this.verticalOscillation = 0.0,
+  });
 
   factory TelemetryData.fromJson(Map<String, dynamic> json) {
     return TelemetryData(
       heartRate: json['heartRate'] ?? 0,
       cadence: json['cadence'] ?? 0,
-      gct: json['gct'] ?? 0,
+      groundContactTime: (json['groundContactTime'] ?? 0).toDouble(),
+      verticalOscillation: (json['verticalOscillation'] ?? 0).toDouble(),
     );
   }
 }
@@ -58,6 +66,32 @@ class LiveCoachingNotifier extends Notifier<LiveCoachingState> {
   @override
   LiveCoachingState build() {
     _initTts();
+
+    // Listen to real BLE Heart Rate updates
+    ref.listen<BleState>(bleProvider, (previous, next) {
+      if (state.isRunning && next.connectedDevice != null && next.currentHeartRate > 0) {
+        // We have real HR! Update state immediately for UI
+        state = state.copyWith(
+          telemetry: TelemetryData(
+            heartRate: next.currentHeartRate,
+            cadence: state.telemetry.cadence,
+            groundContactTime: state.telemetry.groundContactTime,
+            verticalOscillation: state.telemetry.verticalOscillation,
+          )
+        );
+        
+        // Send real telemetry up to the backend AI
+        if (_channel != null) {
+          _channel!.sink.add(jsonEncode({
+            'type': 'REAL_TELEMETRY',
+            'data': {
+              'heartRate': next.currentHeartRate,
+            }
+          }));
+        }
+      }
+    });
+
     return LiveCoachingState(telemetry: TelemetryData());
   }
 
@@ -76,19 +110,30 @@ class LiveCoachingNotifier extends Notifier<LiveCoachingState> {
     _channel = WebSocketChannel.connect(Uri.parse(wsUrl));
 
     _channel!.stream.listen((message) {
-      final data = jsonDecode(message);
+      final jsonMessage = jsonDecode(message);
       
-      if (data['type'] == 'TELEMETRY_UPDATE') {
+      if (jsonMessage['type'] == 'TELEMETRY_UPDATE') {
+        final data = jsonMessage['data'];
+        
+        // If we have a real BLE device, ignore the mock heart rate from the backend
+        final bleState = ref.read(bleProvider);
+        final hasRealHr = bleState.connectedDevice != null && bleState.currentHeartRate > 0;
+        
         state = state.copyWith(
-          telemetry: TelemetryData.fromJson(data['data']),
+          telemetry: TelemetryData(
+            heartRate: hasRealHr ? bleState.currentHeartRate : data['heartRate'],
+            cadence: data['cadence'],
+            groundContactTime: (data['groundContactTime'] ?? 0).toDouble(),
+            verticalOscillation: (data['verticalOscillation'] ?? 0).toDouble(),
+          ),
         );
-      } else if (data['action'] == 'PLAY_TTS') {
-        final cueText = data['text'] as String;
+      } else if (jsonMessage['type'] == 'COACHING_CUE') {
+        final cueText = jsonMessage['text'] as String;
         state = state.copyWith(
           latestCue: CoachingCue(text: cueText, timestamp: DateTime.now()),
         );
         _flutterTts.speak(cueText);
-      } else if (data['type'] == 'SIMULATION_COMPLETE') {
+      } else if (jsonMessage['type'] == 'SIMULATION_COMPLETE') {
         stopRun();
       }
     }, onError: (error) {
