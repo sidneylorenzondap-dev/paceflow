@@ -17,7 +17,18 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: '/run',
-        builder: (context, state) => const LiveRunScreen(),
+        builder: (context, state) {
+          final extra = state.extra as Map<String, dynamic>? ?? {};
+          final targetDistance = extra['distance'] as String? ?? '5K';
+          final targetPaceSeconds = extra['paceSeconds'] as double? ?? 360.0;
+          final isGhostRacing = extra['isGhostRacing'] as bool? ?? false;
+          
+          return LiveRunScreen(
+            targetDistance: targetDistance,
+            targetPaceSeconds: targetPaceSeconds,
+            isGhostRacing: isGhostRacing,
+          );
+        },
       ),
       GoRoute(
         path: '/analytics',

@@ -355,10 +355,12 @@ class PreRunSetupBottomSheet extends StatefulWidget {
 }
 
 class _PreRunSetupBottomSheetState extends State<PreRunSetupBottomSheet> {
+  String _selectedDistance = '5K';
   double _paceSeconds = 360; // 6:00/km in seconds
   String _strictness = 'Standard';
   bool _isGhostRacing = false;
 
+  final List<String> _distances = ['5K', '10K', 'Half Marathon', 'Marathon'];
   final List<String> _strictnessLevels = ['Strict (Race)', 'Standard', 'Relaxed'];
 
   String get _formattedPace {
@@ -398,6 +400,38 @@ class _PreRunSetupBottomSheetState extends State<PreRunSetupBottomSheet> {
           ),
           const SizedBox(height: 32),
           
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(
+              children: _distances.map((dist) {
+                final isSelected = _selectedDistance == dist;
+                return Padding(
+                  padding: const EdgeInsets.only(right: 8.0),
+                  child: ChoiceChip(
+                    label: Text(dist),
+                    selected: isSelected,
+                    onSelected: (selected) {
+                      if (selected) setState(() => _selectedDistance = dist);
+                    },
+                    selectedColor: const Color(0xFFFC4C02).withOpacity(0.2),
+                    backgroundColor: Colors.grey[900],
+                    labelStyle: TextStyle(
+                      color: isSelected ? const Color(0xFFFC4C02) : Colors.grey,
+                      fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(20),
+                      side: BorderSide(
+                        color: isSelected ? const Color(0xFFFC4C02) : Colors.grey[800]!,
+                      ),
+                    ),
+                  ),
+                );
+              }).toList(),
+            ),
+          ),
+          const SizedBox(height: 32),
+
           const Text(
             'Target Pace',
             style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
@@ -499,7 +533,12 @@ class _PreRunSetupBottomSheetState extends State<PreRunSetupBottomSheet> {
           ElevatedButton(
             onPressed: () {
               Navigator.pop(context);
-              context.push('/run');
+              context.push('/run', extra: {
+                'distance': _selectedDistance,
+                'paceSeconds': _paceSeconds,
+                'strictness': _strictness,
+                'isGhostRacing': _isGhostRacing,
+              });
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: Theme.of(context).colorScheme.primary,

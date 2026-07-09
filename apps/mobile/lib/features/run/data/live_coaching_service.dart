@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
 import 'package:flutter_tts/flutter_tts.dart';
+import '../../core/constants/api_constants.dart';
 
 class TelemetryData {
   final int heartRate;
@@ -70,8 +71,8 @@ class LiveCoachingNotifier extends Notifier<LiveCoachingState> {
   void startRun({bool isGhostRace = false}) {
     state = state.copyWith(isRunning: true, latestCue: null);
     
-    // Connect to local Node.js backend (use 10.0.2.2 for Android emulator if needed, localhost for Chrome)
-    const wsUrl = 'wss://paceflow-node.onrender.com/api/v1/live-coaching';
+    // Connect to backend websocket
+    final wsUrl = '${ApiConstants.wsBaseUrl}/live-coaching';
     _channel = WebSocketChannel.connect(Uri.parse(wsUrl));
 
     _channel!.stream.listen((message) {

@@ -4,7 +4,16 @@ import 'package:go_router/go_router.dart';
 import '../data/live_coaching_service.dart';
 
 class LiveRunScreen extends ConsumerStatefulWidget {
-  const LiveRunScreen({super.key});
+  final String targetDistance;
+  final double targetPaceSeconds;
+  final bool isGhostRacing;
+
+  const LiveRunScreen({
+    super.key,
+    this.targetDistance = '5K',
+    this.targetPaceSeconds = 360.0,
+    this.isGhostRacing = false,
+  });
 
   @override
   ConsumerState<LiveRunScreen> createState() => _LiveRunScreenState();
@@ -12,6 +21,12 @@ class LiveRunScreen extends ConsumerStatefulWidget {
 
 class _LiveRunScreenState extends ConsumerState<LiveRunScreen> {
   bool _isPaused = false;
+
+  String get _formattedTargetPace {
+    final minutes = (widget.targetPaceSeconds / 60).floor();
+    final seconds = (widget.targetPaceSeconds % 60).floor().toString().padLeft(2, '0');
+    return '$minutes:$seconds';
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -68,7 +83,7 @@ class _LiveRunScreenState extends ConsumerState<LiveRunScreen> {
               
               // Big Timer / Distance
               Text(
-                '1.24',
+                state.isRunning ? '0.15' : '0.00',
                 style: Theme.of(context).textTheme.displayLarge?.copyWith(
                   fontSize: 84,
                   letterSpacing: -2,
@@ -84,7 +99,7 @@ class _LiveRunScreenState extends ConsumerState<LiveRunScreen> {
               ),
               const SizedBox(height: 24),
               Text(
-                '06:45',
+                state.isRunning ? '01:05' : '00:00',
                 style: Theme.of(context).textTheme.displayMedium?.copyWith(
                   fontSize: 48,
                   letterSpacing: -1,
@@ -107,7 +122,7 @@ class _LiveRunScreenState extends ConsumerState<LiveRunScreen> {
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
                   _buildMetric('HR', '${state.telemetry.heartRate}', 'BPM'),
-                  _buildMetric('PACE', '5:20', '/KM'),
+                  _buildMetric('PACE', _formattedTargetPace, '/KM'),
                   _buildMetric('CAD', '${state.telemetry.cadence}', 'SPM'),
                 ],
               ),
@@ -154,8 +169,8 @@ class _LiveRunScreenState extends ConsumerState<LiveRunScreen> {
                 FloatingActionButton.large(
                   onPressed: () {
                     setState(() { _isPaused = false; });
-                    // Pass isGhostRace from extra or provider in real app, currently default to false or handle later
-                    notifier.startRun(isGhostRace: false);
+                    // Pass isGhostRace from extra
+                    notifier.startRun(isGhostRace: widget.isGhostRacing);
                   },
                   backgroundColor: Theme.of(context).colorScheme.primary,
                   foregroundColor: Colors.black,

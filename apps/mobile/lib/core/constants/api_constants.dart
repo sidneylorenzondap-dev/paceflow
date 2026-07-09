@@ -8,4 +8,12 @@ class ApiConstants {
       return 'http://localhost:3000/api/v1'; // Local testing
     }
   }
+
+  static String get wsBaseUrl {
+    if (kReleaseMode) {
+      return 'wss://paceflow-node.onrender.com/api/v1';
+    } else {
+      return 'ws://localhost:3000/api/v1'; // Local testing
+    }
+  }
 }
