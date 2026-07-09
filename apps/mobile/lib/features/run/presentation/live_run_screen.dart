@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../data/live_coaching_service.dart';
+import '../data/location_service.dart';
 
 class LiveRunScreen extends ConsumerStatefulWidget {
   final String targetDistance;
@@ -28,10 +29,25 @@ class _LiveRunScreenState extends ConsumerState<LiveRunScreen> {
     return '$minutes:$seconds';
   }
 
+  String _formatElapsedTime(int totalSeconds) {
+    final minutes = (totalSeconds / 60).floor().toString().padLeft(2, '0');
+    final seconds = (totalSeconds % 60).toString().padLeft(2, '0');
+    return '$minutes:$seconds';
+  }
+
+  String _formatPace(double paceSeconds) {
+    if (paceSeconds <= 0) return '--:--';
+    final minutes = (paceSeconds / 60).floor();
+    final seconds = (paceSeconds % 60).floor().toString().padLeft(2, '0');
+    return '$minutes:$seconds';
+  }
+
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(liveCoachingProvider);
     final notifier = ref.read(liveCoachingProvider.notifier);
+    final locationState = ref.watch(locationProvider);
+    final locationNotifier = ref.read(locationProvider.notifier);
 
     return Scaffold(
       body: SafeArea(
@@ -47,6 +63,7 @@ class _LiveRunScreenState extends ConsumerState<LiveRunScreen> {
                     icon: const Icon(Icons.close),
                     onPressed: () {
                       notifier.stopRun();
+                      locationNotifier.stopTracking();
                       context.pop();
                     },
                   ),
@@ -83,7 +100,7 @@ class _LiveRunScreenState extends ConsumerState<LiveRunScreen> {
               
               // Big Timer / Distance
               Text(
-                state.isRunning ? '0.15' : '0.00',
+                state.isRunning ? locationState.totalDistanceKm.toStringAsFixed(2) : '0.00',
                 style: Theme.of(context).textTheme.displayLarge?.copyWith(
                   fontSize: 84,
                   letterSpacing: -2,
@@ -99,7 +116,7 @@ class _LiveRunScreenState extends ConsumerState<LiveRunScreen> {
               ),
               const SizedBox(height: 24),
               Text(
-                state.isRunning ? '01:05' : '00:00',
+                state.isRunning ? _formatElapsedTime(locationState.elapsedSeconds) : '00:00',
                 style: Theme.of(context).textTheme.displayMedium?.copyWith(
                   fontSize: 48,
                   letterSpacing: -1,
@@ -122,7 +139,7 @@ class _LiveRunScreenState extends ConsumerState<LiveRunScreen> {
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
                   _buildMetric('HR', '${state.telemetry.heartRate}', 'BPM'),
-                  _buildMetric('PACE', _formattedTargetPace, '/KM'),
+                  _buildMetric('PACE', state.isRunning ? _formatPace(locationState.currentPaceSecondsPerKm) : _formattedTargetPace, '/KM'),
                   _buildMetric('CAD', '${state.telemetry.cadence}', 'SPM'),
                 ],
               ),
@@ -171,6 +188,7 @@ class _LiveRunScreenState extends ConsumerState<LiveRunScreen> {
                     setState(() { _isPaused = false; });
                     // Pass isGhostRace from extra
                     notifier.startRun(isGhostRace: widget.isGhostRacing);
+                    locationNotifier.startTracking();
                   },
                   backgroundColor: Theme.of(context).colorScheme.primary,
                   foregroundColor: Colors.black,
@@ -204,6 +222,7 @@ class _LiveRunScreenState extends ConsumerState<LiveRunScreen> {
                       onPressed: () {
                         setState(() { _isPaused = false; });
                         notifier.stopRun();
+                        locationNotifier.stopTracking();
                         context.push('/analytics');
                       },
                       backgroundColor: Colors.red[800],
