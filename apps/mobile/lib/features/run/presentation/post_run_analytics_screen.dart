@@ -1,14 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:mapbox_maps_flutter/mapbox_maps_flutter.dart';
+import 'package:go_router/go_router.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import '../../../core/constants/api_constants.dart';
 
 class PostRunAnalyticsScreen extends StatefulWidget {
   final String geoJsonData;
+  final double distanceMeters;
 
-  const PostRunAnalyticsScreen({Key? key, required this.geoJsonData}) : super(key: key);
+  const PostRunAnalyticsScreen({
+    super.key, 
+    required this.geoJsonData,
+    this.distanceMeters = 0.0,
+  });
 
   @override
   _PostRunAnalyticsScreenState createState() => _PostRunAnalyticsScreenState();

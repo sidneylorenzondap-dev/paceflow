@@ -35,8 +35,19 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/analytics',
         builder: (context, state) {
-          final geoJsonData = state.extra as String? ?? "{}";
-          return PostRunAnalyticsScreen(geoJsonData: geoJsonData);
+          String geoJsonData = "{}";
+          double distance = 0.0;
+          if (state.extra is String) {
+            geoJsonData = state.extra as String;
+          } else if (state.extra is Map) {
+            final map = state.extra as Map;
+            geoJsonData = map['geoJsonData'] ?? "{}";
+            distance = map['distance'] ?? 0.0;
+          }
+          return PostRunAnalyticsScreen(
+            geoJsonData: geoJsonData,
+            distanceMeters: distance,
+          );
         },
       ),
       GoRoute(
