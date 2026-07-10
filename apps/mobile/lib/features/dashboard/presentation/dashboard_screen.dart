@@ -363,8 +363,15 @@ class _PreRunSetupBottomSheetState extends ConsumerState<PreRunSetupBottomSheet>
   String _strictness = 'Standard';
   bool _isGhostRacing = false;
 
-  final List<String> _distances = ['5K', '10K', 'Half Marathon', 'Marathon'];
-  final List<String> _strictnessLevels = ['Strict (Race)', 'Standard', 'Relaxed'];
+  final List<String> _distances = ['5K', '10K', 'Half Marathon', 'Marathon', 'Other...'];
+  final List<String> _strictnessLevels = ['Cheerleader', 'Standard', 'Drill Sergeant'];
+  final TextEditingController _customDistanceController = TextEditingController();
+
+  @override
+  void dispose() {
+    _customDistanceController.dispose();
+    super.dispose();
+  }
 
   String get _formattedPace {
     final minutes = (_paceSeconds / 60).floor();
@@ -433,6 +440,32 @@ class _PreRunSetupBottomSheetState extends ConsumerState<PreRunSetupBottomSheet>
               }).toList(),
             ),
           ),
+          if (_selectedDistance == 'Other...') ...[
+            const SizedBox(height: 16),
+            TextField(
+              controller: _customDistanceController,
+              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+              style: const TextStyle(color: Colors.white, fontSize: 18),
+              decoration: InputDecoration(
+                labelText: 'Custom Distance (km)',
+                labelStyle: const TextStyle(color: Colors.grey),
+                hintText: 'e.g. 7.5',
+                hintStyle: TextStyle(color: Colors.grey[800]),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(color: Colors.grey[800]!),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: const BorderSide(color: Color(0xFFFC4C02)),
+                ),
+                filled: true,
+                fillColor: Colors.grey[900],
+                suffixText: 'km',
+                suffixStyle: const TextStyle(color: Colors.grey),
+              ),
+            ),
+          ],
           const SizedBox(height: 32),
 
           const Text(
@@ -577,9 +610,13 @@ class _PreRunSetupBottomSheetState extends ConsumerState<PreRunSetupBottomSheet>
           const SizedBox(height: 32),
           ElevatedButton(
             onPressed: () {
+              final finalDistance = _selectedDistance == 'Other...' 
+                  ? (_customDistanceController.text.isNotEmpty ? '${_customDistanceController.text}K' : 'Custom') 
+                  : _selectedDistance;
+                  
               Navigator.pop(context);
               context.push('/run', extra: {
-                'distance': _selectedDistance,
+                'distance': finalDistance,
                 'paceSeconds': _paceSeconds,
                 'strictness': _strictness,
                 'isGhostRacing': _isGhostRacing,

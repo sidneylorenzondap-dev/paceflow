@@ -1,17 +1,34 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = require("express");
-const client_1 = require("@prisma/client");
 const fatigueHeatmap_1 = require("../services/fatigueHeatmap");
+const aiCoach_1 = require("../services/aiCoach");
+const weatherService_1 = require("../services/weatherService");
+const db_1 = require("../db");
 const router = (0, express_1.Router)();
-const prisma = new client_1.PrismaClient();
+const coach = new aiCoach_1.AiCoach();
+router.get('/nutrition', async (req, res) => {
+    try {
+        const durationSecs = Number(req.query.durationSecs) || 1800; // default 30 mins
+        const distanceMeters = Number(req.query.distanceMeters) || 5000; // default 5k
+        const lat = Number(req.query.lat) || 0;
+        const lon = Number(req.query.lon) || 0;
+        const diet = req.query.diet || 'Standard';
+        const weather = await (0, weatherService_1.getWeatherDataForCourse)(lat, lon);
+        const plan = await coach.generateNutritionPlan(durationSecs, distanceMeters, weather.heatIndex, diet);
+        res.json({ plan });
+    }
+    catch (error) {
+        res.status(500).json({ error: 'Failed to generate nutrition plan' });
+    }
+});
 router.get('/fatigue-map', async (req, res) => {
     try {
         const sessionId = req.query.sessionId;
         if (!sessionId) {
             return res.status(400).json({ error: 'Missing sessionId query param' });
         }
-        const samples = await prisma.telemetrySample.findMany({
+        const samples = await db_1.prisma.telemetrySample.findMany({
             where: { sessionId },
             orderBy: { timestamp: 'asc' }
         });

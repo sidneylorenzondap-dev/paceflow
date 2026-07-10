@@ -35,7 +35,12 @@ export const setupLiveCoachingSocket = (server: Server) => {
         
         if (payload.type === 'START_MOCK') {
           if (process.env.MOCK_MODE === 'true') {
-            startMockSimulation(ws, analyzer, coach);
+            coach.setRunGoals({
+              distance: payload.distance,
+              paceSeconds: payload.paceSeconds,
+              strictness: payload.strictness
+            });
+            startMockSimulation(ws, analyzer, coach, payload.distance, payload.paceSeconds, payload.strictness);
           } else {
             ws.send(JSON.stringify({ error: 'Mock mode is not enabled on server.' }));
           }
@@ -43,6 +48,11 @@ export const setupLiveCoachingSocket = (server: Server) => {
         }
 
         if (payload.type === 'START_GHOST') {
+          coach.setRunGoals({
+            distance: payload.distance,
+            paceSeconds: payload.paceSeconds,
+            strictness: payload.strictness
+          });
           await ghostPacer.loadGhostRun(payload.ghostSessionId);
           isGhostRacing = true;
           startTime = Date.now(); // reset start time for the race

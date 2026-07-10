@@ -102,7 +102,7 @@ class LiveCoachingNotifier extends Notifier<LiveCoachingState> {
     await _flutterTts.setPitch(1.0);
   }
 
-  void startRun({bool isGhostRace = false}) {
+  void startRun({bool isGhostRace = false, String? distance, double? paceSeconds, String? strictness}) {
     state = state.copyWith(isRunning: true, latestCue: null);
     
     // Connect to backend websocket
@@ -144,14 +144,20 @@ class LiveCoachingNotifier extends Notifier<LiveCoachingState> {
       stopRun();
     });
 
+    final payload = {
+      "distance": distance,
+      "paceSeconds": paceSeconds,
+      "strictness": strictness,
+    };
+
     // Start mock simulation or ghost race in the backend
     if (isGhostRace) {
-      _channel!.sink.add(jsonEncode({"type": "START_GHOST", "ghostSessionId": "test_ghost_123"}));
+      _channel!.sink.add(jsonEncode({"type": "START_GHOST", "ghostSessionId": "test_ghost_123", ...payload}));
       // In a real scenario, we'd start pushing real BLE telemetry here.
       // For now, let's also trigger the mock so we have data flowing.
-      _channel!.sink.add(jsonEncode({"type": "START_MOCK"}));
+      _channel!.sink.add(jsonEncode({"type": "START_MOCK", ...payload}));
     } else {
-      _channel!.sink.add(jsonEncode({"type": "START_MOCK"}));
+      _channel!.sink.add(jsonEncode({"type": "START_MOCK", ...payload}));
     }
   }
 

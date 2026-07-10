@@ -1,8 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.runMonteCarloSimulation = runMonteCarloSimulation;
-const client_1 = require("@prisma/client");
-const prisma = new client_1.PrismaClient();
+const db_1 = require("../db");
 async function runMonteCarloSimulation(userId, courseId, goalTimeSeconds) {
     const iterations = 10000;
     let successCount = 0;
@@ -24,7 +23,7 @@ async function runMonteCarloSimulation(userId, courseId, goalTimeSeconds) {
     const meanFinishTime = Math.round(finishTimes.reduce((a, b) => a + b, 0) / iterations);
     const successProbability = successCount / iterations;
     // Save the simulation record
-    const simulation = await prisma.predictiveSimulation.create({
+    const simulation = await db_1.prisma.predictiveSimulation.create({
         data: {
             userId,
             courseId,

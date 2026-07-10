@@ -2,9 +2,8 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = require("express");
 const gpxParser_1 = require("../services/gpxParser");
-const client_1 = require("@prisma/client");
+const db_1 = require("../db");
 const router = (0, express_1.Router)();
-const prisma = new client_1.PrismaClient();
 router.post('/import', async (req, res) => {
     try {
         const { name, gpxDataString } = req.body;
@@ -23,7 +22,7 @@ router.post('/import', async (req, res) => {
                 totalElevationGain += eleDiff;
             }
         }
-        const course = await prisma.course.create({
+        const course = await db_1.prisma.course.create({
             data: {
                 name,
                 gpxData: segments, // Storing parsed segments as JSON

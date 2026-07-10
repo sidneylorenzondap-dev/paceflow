@@ -8,12 +8,14 @@ class LiveRunScreen extends ConsumerStatefulWidget {
   final String targetDistance;
   final double targetPaceSeconds;
   final bool isGhostRacing;
+  final String strictness;
 
   const LiveRunScreen({
     super.key,
     this.targetDistance = '5K',
     this.targetPaceSeconds = 360.0,
     this.isGhostRacing = false,
+    this.strictness = 'Standard',
   });
 
   @override
@@ -187,7 +189,12 @@ class _LiveRunScreenState extends ConsumerState<LiveRunScreen> {
                   onPressed: () {
                     setState(() { _isPaused = false; });
                     // Pass isGhostRace from extra
-                    notifier.startRun(isGhostRace: widget.isGhostRacing);
+                    notifier.startRun(
+                      isGhostRace: widget.isGhostRacing,
+                      distance: widget.targetDistance,
+                      paceSeconds: widget.targetPaceSeconds,
+                      strictness: widget.strictness,
+                    );
                     locationNotifier.startTracking();
                   },
                   backgroundColor: Theme.of(context).colorScheme.primary,

@@ -13,6 +13,8 @@ const courses_1 = __importDefault(require("./api/courses"));
 const pacing_1 = __importDefault(require("./api/pacing"));
 const simulations_1 = __importDefault(require("./api/simulations"));
 const analytics_1 = __importDefault(require("./api/analytics"));
+const strava_1 = __importDefault(require("./api/strava"));
+const training_1 = __importDefault(require("./api/training"));
 const liveCoaching_1 = require("./api/liveCoaching");
 dotenv_1.default.config();
 const app = (0, express_1.default)();
@@ -26,6 +28,8 @@ app.use('/api/v1/courses', courses_1.default);
 app.use('/api/v1/pacing', pacing_1.default);
 app.use('/api/v1/simulations', simulations_1.default);
 app.use('/api/v1/analytics', analytics_1.default);
+app.use('/api/v1/strava', strava_1.default);
+app.use('/api/v1/training', training_1.default);
 app.get('/health', (req, res) => {
     res.status(200).json({ status: 'ok' });
 });

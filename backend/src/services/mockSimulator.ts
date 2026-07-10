@@ -4,7 +4,14 @@ import { AiCoach } from './aiCoach';
 import { TelemetrySamplePayload } from './telemetryService';
 import { generateTTS } from './ttsPipeline';
 
-export const startMockSimulation = (ws: WebSocket, analyzer: FormAnalyzer, coach: AiCoach) => {
+export const startMockSimulation = (
+  ws: WebSocket, 
+  analyzer: FormAnalyzer, 
+  coach: AiCoach,
+  targetDistance?: string,
+  targetPaceSeconds?: number,
+  strictness?: string
+) => {
   console.log('[MockSimulator] Starting mock telemetry stream...');
   
   let currentCadence = 175;

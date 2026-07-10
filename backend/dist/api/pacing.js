@@ -1,10 +1,9 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = require("express");
-const client_1 = require("@prisma/client");
 const pacingService_1 = require("../services/pacingService");
+const db_1 = require("../db");
 const router = (0, express_1.Router)();
-const prisma = new client_1.PrismaClient();
 router.get('/curve', async (req, res) => {
     try {
         const courseId = req.query.courseId;
@@ -12,7 +11,7 @@ router.get('/curve', async (req, res) => {
         if (!courseId || isNaN(goalTimeSeconds)) {
             return res.status(400).json({ error: 'Missing courseId or goalTimeSeconds query params' });
         }
-        const course = await prisma.course.findUnique({
+        const course = await db_1.prisma.course.findUnique({
             where: { id: courseId }
         });
         if (!course) {

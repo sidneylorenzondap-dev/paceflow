@@ -9,6 +9,11 @@ export class AiCoach {
   }
   private lastInterventionTime = 0;
   private cooldownMs = 30000; // 30 seconds between interventions
+  private runGoals: { distance?: string, paceSeconds?: number, strictness?: string } = {};
+
+  public setRunGoals(goals: { distance?: string, paceSeconds?: number, strictness?: string }) {
+    this.runGoals = goals;
+  }
 
   public async getCoachingCue(alert: FormAlert): Promise<string | null> {
     const now = Date.now();
@@ -29,9 +34,20 @@ export class AiCoach {
     }
 
     try {
-      const prompt = `You are an elite AI running coach. The runner's real-time telemetry triggered this alert: "${alert.message}". 
+      let personaInstruction = "Act as an elite AI running coach.";
+      if (this.runGoals.strictness === 'Cheerleader') {
+        personaInstruction = "Act as an overly enthusiastic, supportive, and cheerful running coach.";
+      } else if (this.runGoals.strictness === 'Drill Sergeant') {
+        personaInstruction = "Act as an intense, demanding, and tough-love military drill sergeant.";
+      }
+      
+      const paceGoalText = this.runGoals.paceSeconds ? `They are aiming for a pace of ${Math.floor(this.runGoals.paceSeconds / 60)}:${(this.runGoals.paceSeconds % 60).toString().padStart(2, '0')}/km.` : '';
+      const distanceGoalText = this.runGoals.distance ? `Their goal distance is ${this.runGoals.distance}.` : '';
+
+      const prompt = `${personaInstruction} The runner's real-time telemetry triggered this alert: "${alert.message}". 
+      ${paceGoalText} ${distanceGoalText}
       The current weather heat index is around 85°F (factor this into pacing if necessary).
-      Give a concise, single-sentence coaching instruction to correct their form (under 10 words). Example: "Shorten your stride; you're over-striding on the descent."`;
+      Give a concise, single-sentence coaching instruction to correct their form or pace (under 10 words). Example: "Shorten your stride; you're over-striding on the descent."`;
       
       const result = await this.model.generateContent(prompt);
       const cue = result.response.text().trim();

@@ -1,8 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.ingestTelemetryBatch = void 0;
-const client_1 = require("@prisma/client");
-const prisma = new client_1.PrismaClient();
+const db_1 = require("../db");
 const ingestTelemetryBatch = async (sessionId, samples) => {
     // We use createMany for high-throughput insertion.
     // 100Hz telemetry means 100 samples per second.
@@ -18,7 +17,7 @@ const ingestTelemetryBatch = async (sessionId, samples) => {
         heartRate: sample.heartRate
     }));
     // Perform bulk insert
-    await prisma.telemetrySample.createMany({
+    await db_1.prisma.telemetrySample.createMany({
         data: records,
         skipDuplicates: true // Avoid failing on duplicated timestamps from retries
     });
