@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_markdown/flutter_markdown.dart';
-import 'package:http/http.dart' as http;
-import 'dart:convert';
-import '../../../core/constants/api_constants.dart';
+import 'package:go_router/go_router.dart';
+import '../data/training_service.dart';
+import '../domain/training_workout.dart';
 
 class TrainingPlanScreen extends StatefulWidget {
   final String goal;
@@ -13,8 +12,11 @@ class TrainingPlanScreen extends StatefulWidget {
 }
 
 class _TrainingPlanScreenState extends State<TrainingPlanScreen> {
+  final TrainingService _service = TrainingService();
   bool _isLoading = true;
-  String _planMarkdown = '';
+  List<TrainingWorkout>? _workouts;
+  bool _requiresBaseline = false;
+  String _baselineInstruction = '';
   String _errorMessage = '';
 
   @override
@@ -24,29 +26,20 @@ class _TrainingPlanScreenState extends State<TrainingPlanScreen> {
   }
 
   Future<void> _fetchTrainingPlan() async {
-    try {
-      final encodedGoal = Uri.encodeComponent(widget.goal);
-      final url = Uri.parse('${ApiConstants.baseUrl}/training/plan?goal=$encodedGoal');
-      final response = await http.get(url);
+    setState(() { _isLoading = true; _errorMessage = ''; });
+    final response = await _service.getTrainingPlan(widget.goal);
 
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        setState(() {
-          _planMarkdown = data['plan'] ?? 'No plan received.';
-          _isLoading = false;
-        });
+    setState(() {
+      _isLoading = false;
+      if (response.errorMessage != null) {
+        _errorMessage = response.errorMessage!;
+      } else if (response.requiresBaseline) {
+        _requiresBaseline = true;
+        _baselineInstruction = response.baselineInstruction ?? 'Run at a conversational pace (RPE 3-4).';
       } else {
-        setState(() {
-          _errorMessage = 'Failed to load plan: ${response.statusCode}';
-          _isLoading = false;
-        });
+        _workouts = response.plan;
       }
-    } catch (e) {
-      setState(() {
-        _errorMessage = 'Network error: $e';
-        _isLoading = false;
-      });
-    }
+    });
   }
 
   @override
@@ -60,10 +53,20 @@ class _TrainingPlanScreenState extends State<TrainingPlanScreen> {
       ),
       body: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.all(24.0),
+          padding: const EdgeInsets.all(16.0),
           child: _buildContent(),
         ),
       ),
+      floatingActionButton: (_workouts != null && _workouts!.isNotEmpty)
+          ? FloatingActionButton.extended(
+              onPressed: () {
+                context.push('/training/chat');
+              },
+              backgroundColor: const Color(0xFFFC4C02),
+              icon: const Icon(Icons.chat_bubble_outline),
+              label: const Text('Adjust Plan', style: TextStyle(fontWeight: FontWeight.bold)),
+            )
+          : null,
     );
   }
 
@@ -87,40 +90,148 @@ class _TrainingPlanScreenState extends State<TrainingPlanScreen> {
       );
     }
 
-    return SingleChildScrollView(
+    if (_requiresBaseline) {
+      return _buildBaselineState();
+    }
+
+    if (_workouts == null || _workouts!.isEmpty) {
+      return const Center(child: Text('No plan available.', style: TextStyle(color: Colors.grey)));
+    }
+
+    return ListView.builder(
+      itemCount: _workouts!.length,
+      itemBuilder: (context, index) {
+        final workout = _workouts![index];
+        return _buildWorkoutCard(workout);
+      },
+    );
+  }
+
+  Widget _buildBaselineState() {
+    return Center(
+      child: Container(
+        padding: const EdgeInsets.all(24),
+        decoration: BoxDecoration(
+          color: Colors.grey[900],
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(color: const Color(0xFFFC4C02).withOpacity(0.5)),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            const Icon(Icons.directions_run, color: Color(0xFFFC4C02), size: 64),
+            const SizedBox(height: 16),
+            const Text(
+              'Baseline Test Required',
+              style: TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 12),
+            Text(
+              'We need to understand your current fitness level before generating a plan for ${widget.goal}.',
+              style: const TextStyle(color: Colors.white70, fontSize: 16),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 16),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(color: Colors.black45, borderRadius: BorderRadius.circular(12)),
+              child: Text(
+                _baselineInstruction,
+                style: const TextStyle(color: Colors.white, fontStyle: FontStyle.italic),
+                textAlign: TextAlign.center,
+              ),
+            ),
+            const SizedBox(height: 24),
+            ElevatedButton(
+              onPressed: () {
+                context.push('/live_run', extra: {
+                  'targetDistance': 'Open',
+                  'targetPaceSeconds': 420.0,
+                  'isGhostRacing': false,
+                  'strictness': 'Standard'
+                });
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFFFC4C02),
+                padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+              ),
+              child: const Text('Start Baseline Run', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildWorkoutCard(TrainingWorkout workout) {
+    Color typeColor;
+    IconData typeIcon;
+    switch (workout.type.toLowerCase()) {
+      case 'easy':
+        typeColor = Colors.blueAccent;
+        typeIcon = Icons.spa;
+        break;
+      case 'interval':
+        typeColor = Colors.redAccent;
+        typeIcon = Icons.speed;
+        break;
+      case 'long':
+        typeColor = Colors.purpleAccent;
+        typeIcon = Icons.map;
+        break;
+      case 'rest':
+        typeColor = Colors.grey;
+        typeIcon = Icons.bedtime;
+        break;
+      default:
+        typeColor = Colors.white54;
+        typeIcon = Icons.fitness_center;
+    }
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.grey[900],
+        borderRadius: BorderRadius.circular(16),
+        border: Border(left: BorderSide(color: typeColor, width: 4)),
+      ),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Container(
-            padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              color: Colors.grey[900],
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: const Color(0xFFFC4C02).withOpacity(0.3)),
-            ),
-            child: Row(
-              children: [
-                const Icon(Icons.psychology, color: Color(0xFFFC4C02), size: 32),
-                const SizedBox(width: 16),
-                const Expanded(
-                  child: Text(
-                    'Generated by Gemini based on your recent Strava performance.',
-                    style: TextStyle(color: Colors.white70, fontSize: 14),
-                  ),
+          Row(
+            children: [
+              Text(
+                workout.day,
+                style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+              const Spacer(),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: typeColor.withOpacity(0.2),
+                  borderRadius: BorderRadius.circular(8),
                 ),
-              ],
-            ),
+                child: Row(
+                  children: [
+                    Icon(typeIcon, color: typeColor, size: 14),
+                    const SizedBox(width: 4),
+                    Text(
+                      workout.type,
+                      style: TextStyle(color: typeColor, fontSize: 12, fontWeight: FontWeight.bold),
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ),
-          const SizedBox(height: 24),
-          MarkdownBody(
-            data: _planMarkdown,
-            styleSheet: MarkdownStyleSheet(
-              h1: const TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold),
-              h2: const TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold),
-              h3: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
-              p: const TextStyle(color: Colors.white70, fontSize: 16, height: 1.5),
-              listBullet: const TextStyle(color: Color(0xFFFC4C02)),
-            ),
+          const SizedBox(height: 8),
+          Text(
+            workout.description,
+            style: const TextStyle(color: Colors.white70, fontSize: 14),
           ),
         ],
       ),

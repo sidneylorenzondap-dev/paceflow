@@ -18,11 +18,54 @@ class _PostRunAnalyticsScreenState extends State<PostRunAnalyticsScreen> {
   MapboxMap? mapboxMap;
   String selectedDiet = 'Standard';
   late Future<String> _nutritionPlanFuture;
+  bool _showedCelebration = false;
 
   @override
   void initState() {
     super.initState();
     _nutritionPlanFuture = _fetchNutritionPlan(selectedDiet);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _checkPlanCompletion();
+    });
+  }
+
+  void _checkPlanCompletion() {
+    // Basic mock check: If they ran further than 5000m, they likely broke a baseline record!
+    if (widget.distanceMeters >= 5000 && !_showedCelebration) {
+      _showedCelebration = true;
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => AlertDialog(
+          backgroundColor: Colors.grey[900],
+          title: const Row(
+            children: [
+              Icon(Icons.emoji_events, color: Colors.amber, size: 32),
+              SizedBox(width: 8),
+              Text('Plan Completed!', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+            ],
+          ),
+          content: const Text(
+            'Incredible work! You just broke your record and completed your active training plan. Are you ready to level up and generate a new plan?',
+            style: TextStyle(color: Colors.white70),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Not right now', style: TextStyle(color: Colors.grey)),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.pop(context);
+                context.go('/training');
+              },
+              style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFFC4C02)),
+              child: const Text('Level Up!'),
+            ),
+          ],
+        ),
+      );
+    }
   }
 
   Map<String, String> _nutritionCache = {};

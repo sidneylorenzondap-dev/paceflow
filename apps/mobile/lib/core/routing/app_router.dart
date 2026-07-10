@@ -1,10 +1,10 @@
-
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../features/dashboard/presentation/dashboard_screen.dart';
 import '../../features/run/presentation/live_run_screen.dart';
 import '../../features/run/presentation/post_run_analytics_screen.dart';
+import '../../features/training/presentation/training_adjust_chat_screen.dart';
 import '../../features/training/presentation/training_plan_screen.dart';
 
 final appRouterProvider = Provider<GoRouter>((ref) {
@@ -45,6 +45,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           final goal = state.extra as String? ?? "Sub-20 5K";
           return TrainingPlanScreen(goal: goal);
         },
+      ),
+      GoRoute(
+        path: '/training/chat',
+        builder: (context, state) => const TrainingAdjustChatScreen(),
       ),
     ],
   );

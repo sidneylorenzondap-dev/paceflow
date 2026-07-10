@@ -10,8 +10,31 @@ export interface RunRecord {
   source: 'Strava' | 'LiveRun';
 }
 
+export interface TrainingWorkout {
+  day: string;
+  type: 'Easy' | 'Interval' | 'Long' | 'Rest' | 'Baseline';
+  description: string;
+  targetDistanceMeters?: number;
+}
+
+export interface UserProfile {
+  id: string;
+  subscriptionTier: 'free' | 'premium';
+  aiCredits: number;
+  activePlan: TrainingWorkout[] | null;
+  activePlanGoal: string | null;
+}
+
 class MockDatabase {
   private runs: RunRecord[] = [];
+  
+  public userProfile: UserProfile = {
+    id: 'user_1',
+    subscriptionTier: 'premium',
+    aiCredits: 10,
+    activePlan: null,
+    activePlanGoal: null
+  };
 
   public saveRun(run: RunRecord) {
     this.runs.push(run);

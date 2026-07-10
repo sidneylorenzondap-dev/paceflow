@@ -79,12 +79,6 @@ class AiCoach {
     planCache = new Map();
     async generateTrainingPlan(goal, history) {
         try {
-            const historyHash = history.map(h => h.id).join(',');
-            const cacheKey = `${goal}_${historyHash}`;
-            if (this.planCache.has(cacheKey)) {
-                console.log('[AiCoach] Returning cached training plan to save API credits');
-                return this.planCache.get(cacheKey);
-            }
             const historyContext = history.length > 0
                 ? `Here is their recent run history: ${JSON.stringify(history)}`
                 : `They have no recent run history recorded.`;
@@ -93,19 +87,76 @@ class AiCoach {
         Their goal is: ${goal}.
         ${historyContext}
 
-        First, analyze if their goal is realistic based on their history. If it's highly unrealistic (e.g. asking for a 2-hour marathon but their 5K pace is very slow), gently tell them it might take longer, but provide a step-up plan anyway to start their journey.
-        Then, generate a personalized 7-day plan (Monday-Sunday).
-        If their history shows low cadence or high heart rate, recommend specific drills to address it.
-        Keep it concise, actionable, and formatted as a Markdown list.
+        Adhere STRICTLY to verified coaching methodologies (e.g. the 80/20 rule where 80% of runs are easy, 20% are hard).
+        If the user does not have a heart rate monitor, specify effort using RPE (Rate of Perceived Exertion) and the "Talk Test" (e.g., "Run at a pace where you can comfortably hold a conversation").
+        
+        OUTPUT EXACTLY AND ONLY VALID JSON. DO NOT WRAP IN MARKDOWN BACKTICKS. DO NOT INCLUDE ANY OTHER TEXT.
+        The JSON MUST be an array of exactly 7 objects, representing Monday to Sunday.
+        Schema:
+        [
+          {
+            "day": "Monday",
+            "type": "Easy" | "Interval" | "Long" | "Rest",
+            "description": "Short description of the workout (e.g., '30 min easy run, conversational pace')",
+            "targetDistanceMeters": 5000 // optional number if applicable
+          }
+        ]
       `;
             const result = await this.model.generateContent(prompt);
-            const generatedPlan = result.response.text();
-            this.planCache.set(cacheKey, generatedPlan);
+            let jsonText = result.response.text().trim();
+            // Clean up markdown block if the model ignores the instruction
+            if (jsonText.startsWith('\`\`\`json')) {
+                jsonText = jsonText.replace(/^\`\`\`json\n/, '').replace(/\n\`\`\`$/, '');
+            }
+            else if (jsonText.startsWith('\`\`\`')) {
+                jsonText = jsonText.replace(/^\`\`\`\n/, '').replace(/\n\`\`\`$/, '');
+            }
+            const generatedPlan = JSON.parse(jsonText);
             return generatedPlan;
         }
         catch (e) {
             console.error('[AiCoach] Training plan generation failed', e);
-            return 'Failed to generate training plan. Please rest and try again tomorrow.';
+            throw new Error('Failed to generate training plan.');
+        }
+    }
+    async adjustTrainingPlan(currentPlan, userFeedback) {
+        try {
+            const prompt = `
+        Act as an elite Olympic running coach. 
+        Here is the user's current 1-week training plan:
+        ${JSON.stringify(currentPlan)}
+        
+        The user has provided the following feedback/request for adjustment:
+        "${userFeedback}"
+        
+        Adjust the plan logically to accommodate their request. (e.g., if they are sick, turn today into a Rest day and shift workouts. If it's too hard, make it easier).
+        
+        OUTPUT EXACTLY AND ONLY VALID JSON. DO NOT WRAP IN MARKDOWN BACKTICKS. DO NOT INCLUDE ANY OTHER TEXT.
+        The JSON MUST be an array of exactly 7 objects, representing Monday to Sunday.
+        Schema:
+        [
+          {
+            "day": "Monday",
+            "type": "Easy" | "Interval" | "Long" | "Rest",
+            "description": "Short description of the workout (e.g., '30 min easy run, conversational pace')",
+            "targetDistanceMeters": 5000
+          }
+        ]
+      `;
+            const result = await this.model.generateContent(prompt);
+            let jsonText = result.response.text().trim();
+            if (jsonText.startsWith('\`\`\`json')) {
+                jsonText = jsonText.replace(/^\`\`\`json\n/, '').replace(/\n\`\`\`$/, '');
+            }
+            else if (jsonText.startsWith('\`\`\`')) {
+                jsonText = jsonText.replace(/^\`\`\`\n/, '').replace(/\n\`\`\`$/, '');
+            }
+            const generatedPlan = JSON.parse(jsonText);
+            return generatedPlan;
+        }
+        catch (e) {
+            console.error('[AiCoach] Plan adjustment failed', e);
+            throw new Error('Failed to adjust training plan.');
         }
     }
 }
