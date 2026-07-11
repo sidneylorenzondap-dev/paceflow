@@ -18,7 +18,27 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 app.use(cors());
+// Keep last 100 logs in memory for debugging
+export const recentLogs: string[] = [];
+const originalConsoleError = console.error;
+console.error = function (...args) {
+  recentLogs.push(`[ERROR] ${new Date().toISOString()}: ${args.map(a => typeof a === 'object' ? JSON.stringify(a) : a).join(' ')}`);
+  if (recentLogs.length > 100) recentLogs.shift();
+  originalConsoleError.apply(console, args);
+};
+
+const originalConsoleLog = console.log;
+console.log = function (...args) {
+  recentLogs.push(`[INFO] ${new Date().toISOString()}: ${args.map(a => typeof a === 'object' ? JSON.stringify(a) : a).join(' ')}`);
+  if (recentLogs.length > 100) recentLogs.shift();
+  originalConsoleLog.apply(console, args);
+};
+
 app.use(express.json());
+
+app.get('/api/v1/logs', (req, res) => {
+  res.json({ logs: recentLogs });
+});
 
 // Routes
 app.use('/api/v1/sync/wearable', syncRoutes);
