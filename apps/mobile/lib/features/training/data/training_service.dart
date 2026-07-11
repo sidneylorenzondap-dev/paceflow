@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import '../../../core/constants/api_constants.dart';
 import '../domain/training_workout.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class TrainingServiceResponse {
   final List<TrainingWorkout>? plan;
@@ -22,7 +23,13 @@ class TrainingService {
     try {
       final encodedGoal = Uri.encodeComponent(goal);
       final url = Uri.parse('${ApiConstants.baseUrl}/training/plan?goal=$encodedGoal');
-      final response = await http.get(url);
+      
+      final session = Supabase.instance.client.auth.currentSession;
+      final token = session?.accessToken;
+
+      final response = await http.get(url, headers: {
+        if (token != null) 'Authorization': 'Bearer $token',
+      });
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
@@ -48,9 +55,16 @@ class TrainingService {
   Future<TrainingServiceResponse> adjustTrainingPlan(String feedback) async {
     try {
       final url = Uri.parse('${ApiConstants.baseUrl}/training/plan/adjust');
+      
+      final session = Supabase.instance.client.auth.currentSession;
+      final token = session?.accessToken;
+
       final response = await http.post(
         url,
-        headers: {'Content-Type': 'application/json'},
+        headers: {
+          'Content-Type': 'application/json',
+          if (token != null) 'Authorization': 'Bearer $token',
+        },
         body: jsonEncode({'feedback': feedback}),
       );
 
