@@ -146,7 +146,7 @@ class _TrainingPlanScreenState extends State<TrainingPlanScreen> {
             const SizedBox(height: 24),
             ElevatedButton(
               onPressed: () {
-                context.push('/live_run', extra: {
+                context.push('/run', extra: {
                   'targetDistance': 'Open',
                   'targetPaceSeconds': 420.0,
                   'isGhostRacing': false,
