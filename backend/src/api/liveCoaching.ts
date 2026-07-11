@@ -27,8 +27,11 @@ export const setupLiveCoachingSocket = (server: Server) => {
     }
   });
 
-  wss.on('connection', async (ws: WebSocket, request: any) => {
+  wss.on('connection', (ws: WebSocket, request: any) => {
     console.log('Client connected for live coaching.');
+    
+    let isAuthenticated = false;
+    let authPromise: Promise<boolean> | null = null;
     
     // Auth Check
     const url = new URL(request.url, `http://${request.headers.host}`);
@@ -40,12 +43,15 @@ export const setupLiveCoachingSocket = (server: Server) => {
       return;
     }
 
-    const { data: { user }, error } = await supabase.auth.getUser(token);
-    if (error || !user) {
-      ws.send(JSON.stringify({ error: 'Invalid token' }));
-      ws.close();
-      return;
-    }
+    authPromise = supabase.auth.getUser(token).then(({ data: { user }, error }) => {
+      if (error || !user) {
+        ws.send(JSON.stringify({ error: 'Invalid token' }));
+        ws.close();
+        return false;
+      }
+      isAuthenticated = true;
+      return true;
+    });
 
     const analyzer = new FormAnalyzer();
     const coach = new AiCoach();
@@ -54,6 +60,12 @@ export const setupLiveCoachingSocket = (server: Server) => {
     let isGhostRacing = false;
 
     ws.on('message', async (message: string) => {
+      // Wait for auth to complete before processing any messages
+      if (authPromise) {
+        const isValid = await authPromise;
+        if (!isValid) return;
+      }
+
       try {
         const payload = JSON.parse(message);
         
