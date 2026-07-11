@@ -7,11 +7,18 @@ import { TelemetrySamplePayload } from '../services/telemetryService';
 import { startMockSimulation } from '../services/mockSimulator';
 import { GhostPacer } from '../services/ghostPacer';
 
+import { createClient } from '@supabase/supabase-js';
+import { prisma } from '../db';
+
+const supabaseUrl = process.env.SUPABASE_URL || '';
+const supabaseKey = process.env.SUPABASE_ANON_KEY || '';
+const supabase = createClient(supabaseUrl, supabaseKey);
+
 export const setupLiveCoachingSocket = (server: Server) => {
   const wss = new WebSocketServer({ noServer: true });
 
   server.on('upgrade', (request, socket, head) => {
-    if (request.url === '/api/v1/live-coaching') {
+    if (request.url?.startsWith('/api/v1/live-coaching')) {
       wss.handleUpgrade(request, socket, head, (ws: WebSocket) => {
         wss.emit('connection', ws, request);
       });
@@ -20,9 +27,26 @@ export const setupLiveCoachingSocket = (server: Server) => {
     }
   });
 
-  wss.on('connection', (ws: WebSocket) => {
+  wss.on('connection', async (ws: WebSocket, request: any) => {
     console.log('Client connected for live coaching.');
     
+    // Auth Check
+    const url = new URL(request.url, `http://${request.headers.host}`);
+    const token = url.searchParams.get('token');
+    
+    if (!token) {
+      ws.send(JSON.stringify({ error: 'Missing token' }));
+      ws.close();
+      return;
+    }
+
+    const { data: { user }, error } = await supabase.auth.getUser(token);
+    if (error || !user) {
+      ws.send(JSON.stringify({ error: 'Invalid token' }));
+      ws.close();
+      return;
+    }
+
     const analyzer = new FormAnalyzer();
     const coach = new AiCoach();
     const ghostPacer = new GhostPacer();
@@ -34,16 +58,13 @@ export const setupLiveCoachingSocket = (server: Server) => {
         const payload = JSON.parse(message);
         
         if (payload.type === 'START_MOCK') {
-          if (process.env.MOCK_MODE === 'true') {
-            coach.setRunGoals({
-              distance: payload.distance,
-              paceSeconds: payload.paceSeconds,
-              strictness: payload.strictness
-            });
-            startMockSimulation(ws, analyzer, coach, payload.distance, payload.paceSeconds, payload.strictness);
-          } else {
-            ws.send(JSON.stringify({ error: 'Mock mode is not enabled on server.' }));
-          }
+          // Allow mock runs for any authenticated user
+          coach.setRunGoals({
+            distance: payload.distance,
+            paceSeconds: payload.paceSeconds,
+            strictness: payload.strictness
+          });
+          startMockSimulation(ws, analyzer, coach, payload.distance, payload.paceSeconds, payload.strictness);
           return;
         }
 

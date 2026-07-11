@@ -3,6 +3,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../data/live_coaching_service.dart';
 import '../data/location_service.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+import '../../../core/constants/api_constants.dart';
 
 class LiveRunScreen extends ConsumerStatefulWidget {
   final String targetDistance;
@@ -226,10 +230,32 @@ class _LiveRunScreenState extends ConsumerState<LiveRunScreen> {
                     const SizedBox(width: 32),
                     FloatingActionButton.large(
                       heroTag: 'stop_btn',
-                      onPressed: () {
+                      onPressed: () async {
                         setState(() { _isPaused = false; });
                         notifier.stopRun();
                         locationNotifier.stopTracking();
+
+                        // Save run session
+                        final session = Supabase.instance.client.auth.currentSession;
+                        final token = session?.accessToken;
+                        if (token != null) {
+                          try {
+                            final url = Uri.parse('${ApiConstants.baseUrl}/training/session/save');
+                            await http.post(url, 
+                              headers: {
+                                'Authorization': 'Bearer $token',
+                                'Content-Type': 'application/json'
+                              },
+                              body: jsonEncode({
+                                'totalTimeSecs': locationState.elapsedSeconds,
+                                'distanceMeters': locationState.totalDistanceKm * 1000,
+                              })
+                            );
+                          } catch (e) {
+                            print('Error saving run session: $e');
+                          }
+                        }
+
                         context.push('/analytics');
                       },
                       backgroundColor: Colors.red[800],

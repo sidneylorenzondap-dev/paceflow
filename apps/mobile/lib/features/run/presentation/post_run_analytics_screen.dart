@@ -4,6 +4,7 @@ import 'package:mapbox_maps_flutter/mapbox_maps_flutter.dart';
 import 'package:go_router/go_router.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../core/constants/api_constants.dart';
 
 class PostRunAnalyticsScreen extends StatefulWidget {
@@ -82,7 +83,13 @@ class _PostRunAnalyticsScreenState extends State<PostRunAnalyticsScreen> {
     }
     try {
       final url = Uri.parse('${ApiConstants.baseUrl}/analytics/nutrition?diet=$diet');
-      final response = await http.get(url);
+      
+      final session = Supabase.instance.client.auth.currentSession;
+      final token = session?.accessToken;
+      
+      final response = await http.get(url, headers: {
+        if (token != null) 'Authorization': 'Bearer $token',
+      });
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         final plan = data['plan'] ?? 'No plan received.';

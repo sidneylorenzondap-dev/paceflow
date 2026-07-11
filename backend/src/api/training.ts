@@ -108,4 +108,37 @@ router.post('/plan/adjust', requireAuth, async (req, res) => {
   }
 });
 
+router.post('/session/save', requireAuth, async (req, res) => {
+  try {
+    const { totalTimeSecs, distanceMeters } = req.body;
+    
+    // Fallbacks if Flutter doesn't send them
+    const time = totalTimeSecs || 900; // 15 mins
+    const dist = distanceMeters || 5000; // 5k
+    const avgPace = (time / 60) / (dist / 1000); // min/km
+
+    let course = await prisma.paceflowCourse.findFirst();
+    if (!course) {
+      course = await prisma.paceflowCourse.create({
+        data: { name: 'Free Run', gpxData: {}, totalElevationGain: 0 }
+      });
+    }
+
+    const session = await prisma.paceflowRunSession.create({
+      data: {
+        userId: req.user.id,
+        courseId: course.id,
+        date: new Date(),
+        totalTime: time,
+        avgPace: avgPace,
+      }
+    });
+
+    res.json({ success: true, session });
+  } catch (error) {
+    console.error('Save Session Error:', error);
+    res.status(500).json({ error: 'Failed to save run session' });
+  }
+});
+
 export default router;

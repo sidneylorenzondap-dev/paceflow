@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
 import 'package:flutter_tts/flutter_tts.dart';
 import '../../../core/constants/api_constants.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'ble_service.dart';
 
 class TelemetryData {
@@ -106,7 +107,9 @@ class LiveCoachingNotifier extends Notifier<LiveCoachingState> {
     state = state.copyWith(isRunning: true, latestCue: null);
     
     // Connect to backend websocket
-    final wsUrl = '${ApiConstants.wsBaseUrl}/live-coaching';
+    final session = Supabase.instance.client.auth.currentSession;
+    final token = session?.accessToken;
+    final wsUrl = '${ApiConstants.wsBaseUrl}/live-coaching?token=$token';
     _channel = WebSocketChannel.connect(Uri.parse(wsUrl));
 
     _channel!.stream.listen((message) {
