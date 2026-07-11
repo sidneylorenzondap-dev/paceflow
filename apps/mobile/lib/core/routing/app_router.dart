@@ -39,12 +39,14 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           final targetPaceSeconds = extra['paceSeconds'] as double? ?? 360.0;
           final isGhostRacing = extra['isGhostRacing'] as bool? ?? false;
           final strictness = extra['strictness'] as String? ?? 'Standard';
+          final isBaseline = extra['isBaseline'] as bool? ?? false;
           
           return LiveRunScreen(
             targetDistance: targetDistance,
             targetPaceSeconds: targetPaceSeconds,
             isGhostRacing: isGhostRacing,
             strictness: strictness,
+            isBaseline: isBaseline,
           );
         },
       ),

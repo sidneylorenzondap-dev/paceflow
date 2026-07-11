@@ -13,6 +13,7 @@ class LiveRunScreen extends ConsumerStatefulWidget {
   final double targetPaceSeconds;
   final bool isGhostRacing;
   final String strictness;
+  final bool isBaseline;
 
   const LiveRunScreen({
     super.key,
@@ -20,6 +21,7 @@ class LiveRunScreen extends ConsumerStatefulWidget {
     this.targetPaceSeconds = 360.0,
     this.isGhostRacing = false,
     this.strictness = 'Standard',
+    this.isBaseline = false,
   });
 
   @override
@@ -256,7 +258,11 @@ class _LiveRunScreenState extends ConsumerState<LiveRunScreen> {
                           }
                         }
 
-                        context.push('/analytics');
+                        if (widget.isBaseline) {
+                          context.go('/training');
+                        } else {
+                          context.push('/analytics');
+                        }
                       },
                       backgroundColor: Colors.red[800],
                       foregroundColor: Colors.white,
