@@ -35,7 +35,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Login failed: ${e.toString()}'), backgroundColor: AppTheme.error),
+          SnackBar(content: Text('Login failed: ${e.toString()}'), backgroundColor: Colors.red),
         );
       }
     } finally {
@@ -53,13 +53,13 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       );
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Check your email for confirmation!'), backgroundColor: AppTheme.success),
+          const SnackBar(content: Text('Check your email for confirmation!'), backgroundColor: Colors.green),
         );
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Signup failed: ${e.toString()}'), backgroundColor: AppTheme.error),
+          SnackBar(content: Text('Signup failed: ${e.toString()}'), backgroundColor: Colors.red),
         );
       }
     } finally {
@@ -70,7 +70,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppTheme.background,
+      backgroundColor: AppTheme.backgroundColor,
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(24.0),
@@ -83,7 +83,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 style: TextStyle(
                   fontSize: 32,
                   fontWeight: FontWeight.w900,
-                  color: AppTheme.primary,
+                  color: AppTheme.primaryColor,
                   letterSpacing: 2.0,
                 ),
                 textAlign: TextAlign.center,
@@ -93,7 +93,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 'Your Elite AI Running Coach',
                 style: TextStyle(
                   fontSize: 16,
-                  color: AppTheme.textSecondary,
+                  color: Colors.grey,
                 ),
                 textAlign: TextAlign.center,
               ),
@@ -103,14 +103,14 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 decoration: InputDecoration(
                   labelText: 'Email',
                   filled: true,
-                  fillColor: AppTheme.surface,
+                  fillColor: AppTheme.surfaceColor,
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
                     borderSide: BorderSide.none,
                   ),
                 ),
                 keyboardType: TextInputType.emailAddress,
-                style: const TextStyle(color: AppTheme.textPrimary),
+                style: const TextStyle(color: AppTheme.onBackgroundColor),
               ),
               const SizedBox(height: 16),
               TextField(
@@ -118,23 +118,23 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 decoration: InputDecoration(
                   labelText: 'Password',
                   filled: true,
-                  fillColor: AppTheme.surface,
+                  fillColor: AppTheme.surfaceColor,
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
                     borderSide: BorderSide.none,
                   ),
                 ),
                 obscureText: true,
-                style: const TextStyle(color: AppTheme.textPrimary),
+                style: const TextStyle(color: AppTheme.onBackgroundColor),
               ),
               const SizedBox(height: 32),
               if (_isLoading)
-                const Center(child: CircularProgressIndicator(color: AppTheme.primary))
+                const Center(child: CircularProgressIndicator(color: AppTheme.primaryColor))
               else ...[
                 ElevatedButton(
                   onPressed: _signIn,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: AppTheme.primary,
+                    backgroundColor: AppTheme.primaryColor,
                     padding: const EdgeInsets.symmetric(vertical: 16),
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                   ),
@@ -144,11 +144,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 OutlinedButton(
                   onPressed: _signUp,
                   style: OutlinedButton.styleFrom(
-                    side: const BorderSide(color: AppTheme.primary),
+                    side: const BorderSide(color: AppTheme.primaryColor),
                     padding: const EdgeInsets.symmetric(vertical: 16),
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                   ),
-                  child: const Text('Create Account', style: TextStyle(fontSize: 18, color: AppTheme.primary)),
+                  child: const Text('Create Account', style: TextStyle(fontSize: 18, color: AppTheme.primaryColor)),
                 ),
               ],
             ],
