@@ -27,7 +27,7 @@ export async function runMonteCarloSimulation(userId: string, courseId: string, 
   const successProbability = successCount / iterations;
 
   // Save the simulation record
-  const simulation = await prisma.predictiveSimulation.create({
+  const simulation = await prisma.paceflowSimulation.create({
     data: {
       userId,
       courseId,

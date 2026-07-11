@@ -2,14 +2,15 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = require("express");
 const aiCoach_1 = require("../services/aiCoach");
-const mockDb_1 = require("../services/mockDb");
+const db_1 = require("../db");
+const auth_1 = require("../middleware/auth");
 const router = (0, express_1.Router)();
 const aiCoach = new aiCoach_1.AiCoach();
-router.get('/plan', async (req, res) => {
+router.get('/plan', auth_1.requireAuth, async (req, res) => {
     try {
         const goal = req.query.goal || 'Improve 5K time';
         // Check subscription tier
-        if (mockDb_1.db.userProfile.subscriptionTier === 'free') {
+        if (req.user.subscriptionTier === 'free') {
             const staticPlan = [
                 { day: 'Monday', type: 'Rest', description: 'Active recovery or complete rest' },
                 { day: 'Tuesday', type: 'Easy', description: '30 min easy run, conversational pace' },
@@ -19,12 +20,14 @@ router.get('/plan', async (req, res) => {
                 { day: 'Saturday', type: 'Rest', description: 'Rest day before long run' },
                 { day: 'Sunday', type: 'Long', description: '60 min long run, easy pace' }
             ];
-            mockDb_1.db.userProfile.activePlan = staticPlan;
-            mockDb_1.db.userProfile.activePlanGoal = goal;
+            await db_1.prisma.paceflowUser.update({
+                where: { id: req.user.id },
+                data: { activePlan: staticPlan, activePlanGoal: goal }
+            });
             return res.json({ plan: staticPlan });
         }
         // Premium users: Check history for baseline
-        const history = mockDb_1.db.getAllRuns();
+        const history = await db_1.prisma.paceflowRunSession.findMany({ where: { userId: req.user.id } });
         if (history.length === 0) {
             // If no history, require a baseline test run
             return res.status(428).json({
@@ -32,41 +35,59 @@ router.get('/plan', async (req, res) => {
                 instruction: 'Please complete a 10-15 minute run at a conversational pace (RPE 3-4 or Talk Test) to establish your baseline fitness.'
             });
         }
-        if (mockDb_1.db.userProfile.aiCredits <= 0) {
+        if (req.user.aiCredits <= 0) {
             return res.status(402).json({ error: 'Out of AI credits for this month.' });
         }
         // Deduct credit
-        mockDb_1.db.userProfile.aiCredits -= 1;
+        const updatedUser = await db_1.prisma.paceflowUser.update({
+            where: { id: req.user.id },
+            data: { aiCredits: req.user.aiCredits - 1 }
+        });
         // Generate the 1-week training plan using AI
-        const plan = await aiCoach.generateTrainingPlan(goal, history);
-        mockDb_1.db.userProfile.activePlan = plan;
-        mockDb_1.db.userProfile.activePlanGoal = goal;
-        res.json({ plan, creditsRemaining: mockDb_1.db.userProfile.aiCredits });
+        const formattedHistory = history.map(h => ({
+            date: h.date.toISOString(),
+            distanceMeters: 5000, // mock distance since it's not in schema
+            durationSecs: h.totalTime,
+            avgHeartRate: 150,
+            avgCadence: 170
+        }));
+        const plan = await aiCoach.generateTrainingPlan(goal, formattedHistory);
+        await db_1.prisma.paceflowUser.update({
+            where: { id: req.user.id },
+            data: { activePlan: plan, activePlanGoal: goal }
+        });
+        res.json({ plan, creditsRemaining: updatedUser.aiCredits });
     }
     catch (error) {
         console.error('Training Plan Error:', error);
         res.status(500).json({ error: 'Failed to generate training plan' });
     }
 });
-router.post('/plan/adjust', async (req, res) => {
+router.post('/plan/adjust', auth_1.requireAuth, async (req, res) => {
     try {
         const { feedback } = req.body;
         if (!feedback) {
             return res.status(400).json({ error: 'Feedback message is required.' });
         }
-        if (mockDb_1.db.userProfile.subscriptionTier === 'free') {
+        if (req.user.subscriptionTier === 'free') {
             return res.status(403).json({ error: 'AI adjustments require a premium subscription.' });
         }
-        if (mockDb_1.db.userProfile.aiCredits <= 0) {
+        if (req.user.aiCredits <= 0) {
             return res.status(402).json({ error: 'Out of AI credits for this month.' });
         }
-        if (!mockDb_1.db.userProfile.activePlan) {
+        if (!req.user.activePlan) {
             return res.status(400).json({ error: 'No active plan found to adjust.' });
         }
-        mockDb_1.db.userProfile.aiCredits -= 1;
-        const adjustedPlan = await aiCoach.adjustTrainingPlan(mockDb_1.db.userProfile.activePlan, feedback);
-        mockDb_1.db.userProfile.activePlan = adjustedPlan;
-        res.json({ plan: adjustedPlan, creditsRemaining: mockDb_1.db.userProfile.aiCredits });
+        const updatedUser = await db_1.prisma.paceflowUser.update({
+            where: { id: req.user.id },
+            data: { aiCredits: req.user.aiCredits - 1 }
+        });
+        const adjustedPlan = await aiCoach.adjustTrainingPlan(req.user.activePlan, feedback);
+        await db_1.prisma.paceflowUser.update({
+            where: { id: req.user.id },
+            data: { activePlan: adjustedPlan }
+        });
+        res.json({ plan: adjustedPlan, creditsRemaining: updatedUser.aiCredits });
     }
     catch (error) {
         console.error('Training Plan Adjustment Error:', error);

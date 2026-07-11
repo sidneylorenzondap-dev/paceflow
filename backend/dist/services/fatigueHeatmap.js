@@ -1,7 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.generateFatigueGeoJSON = generateFatigueGeoJSON;
-function generateFatigueGeoJSON(samples) {
+exports.generateFatigueGeoJSON = void 0;
+const generateFatigueGeoJSON = (samples) => {
     const features = samples.map(sample => {
         // Simplified "Form Degradation" score. High score = worse form.
         let degradationScore = 0;
@@ -31,4 +31,5 @@ function generateFatigueGeoJSON(samples) {
         type: 'FeatureCollection',
         features
     };
-}
+};
+exports.generateFatigueGeoJSON = generateFatigueGeoJSON;

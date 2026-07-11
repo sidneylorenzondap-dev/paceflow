@@ -29,7 +29,7 @@ router.post('/import', async (req, res) => {
       }
     }
 
-    const course = await prisma.course.create({
+    const course = await prisma.paceflowCourse.create({
       data: {
         name,
         gpxData: segments as any, // Storing parsed segments as JSON

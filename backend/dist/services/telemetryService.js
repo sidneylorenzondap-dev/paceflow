@@ -17,7 +17,7 @@ const ingestTelemetryBatch = async (sessionId, samples) => {
         heartRate: sample.heartRate
     }));
     // Perform bulk insert
-    await db_1.prisma.telemetrySample.createMany({
+    await db_1.prisma.paceflowTelemetrySample.createMany({
         data: records,
         skipDuplicates: true // Avoid failing on duplicated timestamps from retries
     });

@@ -22,7 +22,7 @@ router.post('/import', async (req, res) => {
                 totalElevationGain += eleDiff;
             }
         }
-        const course = await db_1.prisma.course.create({
+        const course = await db_1.prisma.paceflowCourse.create({
             data: {
                 name,
                 gpxData: segments, // Storing parsed segments as JSON

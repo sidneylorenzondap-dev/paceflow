@@ -11,7 +11,7 @@ router.get('/curve', async (req, res) => {
         if (!courseId || isNaN(goalTimeSeconds)) {
             return res.status(400).json({ error: 'Missing courseId or goalTimeSeconds query params' });
         }
-        const course = await db_1.prisma.course.findUnique({
+        const course = await db_1.prisma.paceflowCourse.findUnique({
             where: { id: courseId }
         });
         if (!course) {

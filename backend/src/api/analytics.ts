@@ -5,10 +5,12 @@ import { getWeatherDataForCourse } from '../services/weatherService';
 
 import { prisma } from '../db';
 
+import { requireAuth } from '../middleware/auth';
+
 const router = Router();
 const coach = new AiCoach();
 
-router.get('/nutrition', async (req, res) => {
+router.get('/nutrition', requireAuth, async (req, res) => {
   try {
     const durationSecs = Number(req.query.durationSecs) || 1800; // default 30 mins
     const distanceMeters = Number(req.query.distanceMeters) || 5000; // default 5k
@@ -25,7 +27,7 @@ router.get('/nutrition', async (req, res) => {
   }
 });
 
-router.get('/fatigue-map', async (req, res) => {
+router.get('/fatigue-map', requireAuth, async (req, res) => {
   try {
     const sessionId = req.query.sessionId as string;
     
@@ -33,7 +35,7 @@ router.get('/fatigue-map', async (req, res) => {
       return res.status(400).json({ error: 'Missing sessionId query param' });
     }
 
-    const samples = await prisma.telemetrySample.findMany({
+    const samples = await prisma.paceflowTelemetrySample.findMany({
       where: { sessionId },
       orderBy: { timestamp: 'asc' }
     });

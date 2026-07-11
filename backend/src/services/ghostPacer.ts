@@ -1,14 +1,14 @@
-import { TelemetrySample } from '@prisma/client';
+import { PaceflowTelemetrySample } from '@prisma/client';
 import { prisma } from '../db';
 
 export class GhostPacer {
-  private ghostSamples: TelemetrySample[] = [];
+  private ghostSamples: PaceflowTelemetrySample[] = [];
   
   /**
    * Loads a past run's telemetry to act as the "Ghost"
    */
   public async loadGhostRun(runSessionId: string) {
-    this.ghostSamples = await prisma.telemetrySample.findMany({
+    this.ghostSamples = await prisma.paceflowTelemetrySample.findMany({
       where: { sessionId: runSessionId },
       orderBy: { timestamp: 'asc' }
     });

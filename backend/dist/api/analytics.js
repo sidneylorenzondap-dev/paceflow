@@ -5,9 +5,10 @@ const fatigueHeatmap_1 = require("../services/fatigueHeatmap");
 const aiCoach_1 = require("../services/aiCoach");
 const weatherService_1 = require("../services/weatherService");
 const db_1 = require("../db");
+const auth_1 = require("../middleware/auth");
 const router = (0, express_1.Router)();
 const coach = new aiCoach_1.AiCoach();
-router.get('/nutrition', async (req, res) => {
+router.get('/nutrition', auth_1.requireAuth, async (req, res) => {
     try {
         const durationSecs = Number(req.query.durationSecs) || 1800; // default 30 mins
         const distanceMeters = Number(req.query.distanceMeters) || 5000; // default 5k
@@ -22,13 +23,13 @@ router.get('/nutrition', async (req, res) => {
         res.status(500).json({ error: 'Failed to generate nutrition plan' });
     }
 });
-router.get('/fatigue-map', async (req, res) => {
+router.get('/fatigue-map', auth_1.requireAuth, async (req, res) => {
     try {
         const sessionId = req.query.sessionId;
         if (!sessionId) {
             return res.status(400).json({ error: 'Missing sessionId query param' });
         }
-        const samples = await db_1.prisma.telemetrySample.findMany({
+        const samples = await db_1.prisma.paceflowTelemetrySample.findMany({
             where: { sessionId },
             orderBy: { timestamp: 'asc' }
         });

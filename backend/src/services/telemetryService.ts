@@ -27,7 +27,7 @@ export const ingestTelemetryBatch = async (sessionId: string, samples: Telemetry
   }));
 
   // Perform bulk insert
-  await prisma.telemetrySample.createMany({
+  await prisma.paceflowTelemetrySample.createMany({
     data: records,
     skipDuplicates: true // Avoid failing on duplicated timestamps from retries
   });

@@ -16,7 +16,7 @@ router.get('/curve', async (req, res) => {
       return res.status(400).json({ error: 'Missing courseId or goalTimeSeconds query params' });
     }
 
-    const course = await prisma.course.findUnique({
+    const course = await prisma.paceflowCourse.findUnique({
       where: { id: courseId }
     });
 

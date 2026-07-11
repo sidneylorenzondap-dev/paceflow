@@ -1,9 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'core/routing/app_router.dart';
 import 'core/theme/app_theme.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  
+  await Supabase.initialize(
+    url: 'https://caviuueetmzyjtxnfvpd.supabase.co',
+    anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNhdml1dWVldG16eWp0eG5mdnBkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI3MjQ1MTcsImV4cCI6MjA5ODMwMDUxN30.84NubpzbW8r0NC_0baEiIjEGZiwbD2Ooyke2z-drbAQ',
+  );
+
   runApp(const ProviderScope(child: PaceFlowApp()));
 }
 

@@ -1,5 +1,5 @@
 import { TelemetrySamplePayload } from './telemetryService';
-import { db, RunRecord } from './mockDb';
+import { prisma } from '../db';
 import crypto from 'crypto';
 
 export const importLatestStravaRun = async (): Promise<any> => {
@@ -31,16 +31,31 @@ export const importLatestStravaRun = async (): Promise<any> => {
       times.push(Date.now() - (300 - i) * 1000);
     }
 
-    const record: RunRecord = {
-      id: crypto.randomUUID(),
-      date: new Date().toISOString(),
-      distanceMeters: 5000,
-      durationSecs: 300,
-      avgHeartRate: Math.round(heartRates.reduce((a, b) => a + b, 0) / heartRates.length),
-      avgCadence: Math.round(cadences.reduce((a, b) => a + b, 0) / cadences.length),
-      source: 'Strava'
-    };
-    db.saveRun(record);
+    // Save the run to our actual Prisma database
+    // Note: We'd need an actual user ID here from the request.
+    // For now, if we're in mock mode, we assume user_1 or a default user.
+    const user = await prisma.paceflowUser.findFirst();
+    if (user) {
+      // Find or create course
+      const course = await prisma.paceflowCourse.create({
+        data: {
+          name: "Mock Strava 5K",
+          gpxData: {},
+          totalElevationGain: 50.0
+        }
+      });
+
+      await prisma.paceflowRunSession.create({
+        data: {
+          id: crypto.randomUUID(),
+          userId: user.id,
+          courseId: course.id,
+          date: new Date(),
+          totalTime: 300,
+          avgPace: 5.5,
+        }
+      });
+    }
 
     return {
       type: "FeatureCollection",

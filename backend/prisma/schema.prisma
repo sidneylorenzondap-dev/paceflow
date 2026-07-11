@@ -1,77 +1,94 @@
 generator client {
-  provider = "prisma-client-js"
+  provider        = "prisma-client-js"
+  previewFeatures = ["multiSchema"]
 }
 
 datasource db {
   provider = "postgresql"
+  schemas  = ["paceflow"]
 }
 
-model User {
-  id             String         @id @default(uuid())
-  email          String         @unique
-  weight         Float?
-  vo2Max         Float?
-  thresholdHr    Int?
-  createdAt      DateTime       @default(now())
-  trainingPlans  TrainingPlan[]
-  runSessions    RunSession[]
-  simulations    PredictiveSimulation[]
+model PaceflowUser {
+  id               String                 @id @default(uuid())
+  email            String                 @unique
+  weight           Float?
+  vo2Max           Float?
+  thresholdHr      Int?
+  subscriptionTier String                 @default("free")
+  aiCredits        Int                    @default(10)
+  activePlan       Json?
+  activePlanGoal   String?
+  createdAt        DateTime               @default(now())
+  trainingPlans    PaceflowTrainingPlan[]
+  runSessions      PaceflowRunSession[]
+  simulations      PaceflowSimulation[]
+
+  @@schema("paceflow")
 }
 
-model TrainingPlan {
-  id            String   @id @default(uuid())
+model PaceflowTrainingPlan {
+  id            String       @id @default(uuid())
   userId        String
   targetDate    DateTime
-  goalTime      Int      // in seconds
-  goalDistance  Float    // in meters
-  user          User     @relation(fields: [userId], references: [id])
+  goalTime      Int          // in seconds
+  goalDistance  Float        // in meters
+  user          PaceflowUser @relation(fields: [userId], references: [id])
+
+  @@schema("paceflow")
 }
 
-model Course {
-  id                  String         @id @default(uuid())
-  name                String
-  gpxData             Json
-  totalElevationGain  Float
-  heatIndexFactor     Float?
-  runSessions         RunSession[]
-  simulations         PredictiveSimulation[]
+model PaceflowCourse {
+  id                 String               @id @default(uuid())
+  name               String
+  gpxData            Json
+  totalElevationGain Float
+  heatIndexFactor    Float?
+  runSessions        PaceflowRunSession[]
+  simulations        PaceflowSimulation[]
+
+  @@schema("paceflow")
 }
 
-model RunSession {
-  id               String            @id @default(uuid())
+model PaceflowRunSession {
+  id               String                    @id @default(uuid())
   userId           String
   courseId         String
   date             DateTime
-  totalTime        Int               // in seconds
-  avgPace          Float             // min/km or min/mile
-  user             User              @relation(fields: [userId], references: [id])
-  course           Course            @relation(fields: [courseId], references: [id])
-  telemetrySamples TelemetrySample[]
+  totalTime        Int                       // in seconds
+  avgPace          Float                     // min/km or min/mile
+  user             PaceflowUser              @relation(fields: [userId], references: [id])
+  course           PaceflowCourse            @relation(fields: [courseId], references: [id])
+  telemetrySamples PaceflowTelemetrySample[]
+
+  @@schema("paceflow")
 }
 
-model TelemetrySample {
-  id                  String     @id @default(uuid())
+model PaceflowTelemetrySample {
+  id                  String             @id @default(uuid())
   sessionId           String
-  timestamp           BigInt     // ms precision
+  timestamp           BigInt             // ms precision
   lat                 Float
   lon                 Float
   elevation           Float
   cadence             Int?
-  gct                 Int?       // Ground Contact Time (ms)
+  gct                 Int?               // Ground Contact Time (ms)
   verticalOscillation Float?
   heartRate           Int?
-  runSession          RunSession @relation(fields: [sessionId], references: [id])
+  runSession          PaceflowRunSession @relation(fields: [sessionId], references: [id])
 
   @@index([sessionId, timestamp])
+  @@schema("paceflow")
 }
 
-model PredictiveSimulation {
-  id                  String   @id @default(uuid())
-  userId              String
-  courseId            String
-  scenarioParams      Json
-  probableFinishTime  Int      // in seconds
-  confidenceInterval  Float
-  user                User     @relation(fields: [userId], references: [id])
-  course              Course   @relation(fields: [courseId], references: [id])
+model PaceflowSimulation {
+  id                 String         @id @default(uuid())
+  userId             String
+  courseId           String
+  scenarioParams     Json
+  probableFinishTime Int            // in seconds
+  confidenceInterval Float
+  user               PaceflowUser   @relation(fields: [userId], references: [id])
+  course             PaceflowCourse @relation(fields: [courseId], references: [id])
+
+  @@schema("paceflow")
 }

@@ -4,7 +4,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.importLatestStravaRun = void 0;
-const mockDb_1 = require("./mockDb");
+const db_1 = require("../db");
 const crypto_1 = __importDefault(require("crypto"));
 const importLatestStravaRun = async () => {
     const token = process.env.STRAVA_ACCESS_TOKEN || '';
@@ -28,16 +28,30 @@ const importLatestStravaRun = async () => {
             cadences.push(Math.round(cadence));
             times.push(Date.now() - (300 - i) * 1000);
         }
-        const record = {
-            id: crypto_1.default.randomUUID(),
-            date: new Date().toISOString(),
-            distanceMeters: 5000,
-            durationSecs: 300,
-            avgHeartRate: Math.round(heartRates.reduce((a, b) => a + b, 0) / heartRates.length),
-            avgCadence: Math.round(cadences.reduce((a, b) => a + b, 0) / cadences.length),
-            source: 'Strava'
-        };
-        mockDb_1.db.saveRun(record);
+        // Save the run to our actual Prisma database
+        // Note: We'd need an actual user ID here from the request.
+        // For now, if we're in mock mode, we assume user_1 or a default user.
+        const user = await db_1.prisma.paceflowUser.findFirst();
+        if (user) {
+            // Find or create course
+            const course = await db_1.prisma.paceflowCourse.create({
+                data: {
+                    name: "Mock Strava 5K",
+                    gpxData: {},
+                    totalElevationGain: 50.0
+                }
+            });
+            await db_1.prisma.paceflowRunSession.create({
+                data: {
+                    id: crypto_1.default.randomUUID(),
+                    userId: user.id,
+                    courseId: course.id,
+                    date: new Date(),
+                    totalTime: 300,
+                    avgPace: 5.5,
+                }
+            });
+        }
         return {
             type: "FeatureCollection",
             features: [

@@ -8,7 +8,7 @@ class GhostPacer {
      * Loads a past run's telemetry to act as the "Ghost"
      */
     async loadGhostRun(runSessionId) {
-        this.ghostSamples = await db_1.prisma.telemetrySample.findMany({
+        this.ghostSamples = await db_1.prisma.paceflowTelemetrySample.findMany({
             where: { sessionId: runSessionId },
             orderBy: { timestamp: 'asc' }
         });

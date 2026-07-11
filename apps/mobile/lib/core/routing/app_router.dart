@@ -6,13 +6,29 @@ import '../../features/run/presentation/live_run_screen.dart';
 import '../../features/run/presentation/post_run_analytics_screen.dart';
 import '../../features/training/presentation/training_adjust_chat_screen.dart';
 import '../../features/training/presentation/training_plan_screen.dart';
+import '../../features/auth/presentation/login_screen.dart';
+import '../../features/auth/data/auth_service.dart';
 
 final appRouterProvider = Provider<GoRouter>((ref) {
+  final authState = ref.watch(authStateProvider);
+
   return GoRouter(
-    initialLocation: '/',
+    initialLocation: '/login',
+    redirect: (context, state) {
+      final isAuth = authState.value?.session != null;
+      final isLoggingIn = state.uri.toString() == '/login';
+
+      if (!isAuth && !isLoggingIn) return '/login';
+      if (isAuth && isLoggingIn) return '/dashboard';
+      return null;
+    },
     routes: [
       GoRoute(
-        path: '/',
+        path: '/login',
+        builder: (context, state) => const LoginScreen(),
+      ),
+      GoRoute(
+        path: '/dashboard',
         builder: (context, state) => const DashboardScreen(),
       ),
       GoRoute(

@@ -23,7 +23,7 @@ async function runMonteCarloSimulation(userId, courseId, goalTimeSeconds) {
     const meanFinishTime = Math.round(finishTimes.reduce((a, b) => a + b, 0) / iterations);
     const successProbability = successCount / iterations;
     // Save the simulation record
-    const simulation = await db_1.prisma.predictiveSimulation.create({
+    const simulation = await db_1.prisma.paceflowSimulation.create({
         data: {
             userId,
             courseId,

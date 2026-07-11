@@ -1,6 +1,6 @@
-import { TelemetrySample } from '@prisma/client';
+import { PaceflowTelemetrySample } from '@prisma/client';
 
-export function generateFatigueGeoJSON(samples: TelemetrySample[]) {
+export const generateFatigueGeoJSON = (samples: PaceflowTelemetrySample[]) => {
   const features = samples.map(sample => {
     // Simplified "Form Degradation" score. High score = worse form.
     let degradationScore = 0;
