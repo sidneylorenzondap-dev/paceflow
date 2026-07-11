@@ -8,8 +8,8 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   
   await Supabase.initialize(
-    url: 'https://caviuueetmzyjtxnfvpd.supabase.co',
-    anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNhdml1dWVldG16eWp0eG5mdnBkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI3MjQ1MTcsImV4cCI6MjA5ODMwMDUxN30.84NubpzbW8r0NC_0baEiIjEGZiwbD2Ooyke2z-drbAQ',
+    url: 'https://jjxwczjynvjvkgjcyiyo.supabase.co',
+    anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpqeHdjemp5bnZqdmtnamN5aXlvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODEyMTA2NzAsImV4cCI6MjA5Njc4NjY3MH0.z13h_ajz031a_BVX7ZTpZIb55QTUS0ys_93P74i_SAQ',
   );
 
   runApp(const ProviderScope(child: PaceFlowApp()));
