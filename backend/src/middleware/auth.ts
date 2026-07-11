@@ -40,6 +40,7 @@ export const requireAuth = async (req: Request, res: Response, next: NextFunctio
   try {
     const { data: { user }, error } = await supabase.auth.getUser(token);
     if (error || !user) {
+      console.error('[Auth Error] Invalid token:', error);
       return res.status(401).json({ error: 'Invalid token' });
     }
 
@@ -58,6 +59,7 @@ export const requireAuth = async (req: Request, res: Response, next: NextFunctio
     req.user = dbUser;
     next();
   } catch (err) {
+    console.error('[Auth Error] Authentication failed completely:', err);
     return res.status(401).json({ error: 'Authentication failed' });
   }
 };
