@@ -6,6 +6,7 @@ import '../../../core/constants/api_constants.dart';
 import '../../run/presentation/device_scanner_screen.dart';
 import '../../run/data/ble_service.dart';
 import '../../activities/presentation/activities_screen.dart';
+import '../../user/data/user_service.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -231,14 +232,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 }
 
-class GoalSelectionBottomSheet extends StatefulWidget {
+class GoalSelectionBottomSheet extends ConsumerStatefulWidget {
   const GoalSelectionBottomSheet({super.key});
 
   @override
-  State<GoalSelectionBottomSheet> createState() => _GoalSelectionBottomSheetState();
+  ConsumerState<GoalSelectionBottomSheet> createState() => _GoalSelectionBottomSheetState();
 }
 
-class _GoalSelectionBottomSheetState extends State<GoalSelectionBottomSheet> {
+class _GoalSelectionBottomSheetState extends ConsumerState<GoalSelectionBottomSheet> {
   String _selectedDistance = '10K';
   double _paceSeconds = 330; // 5:30/km in seconds
 
@@ -252,6 +253,8 @@ class _GoalSelectionBottomSheetState extends State<GoalSelectionBottomSheet> {
 
   @override
   Widget build(BuildContext context) {
+    final userProfileAsync = ref.watch(userProfileProvider);
+
     return Container(
       decoration: BoxDecoration(
         color: const Color(0xFF1A1A1A),
@@ -274,9 +277,47 @@ class _GoalSelectionBottomSheetState extends State<GoalSelectionBottomSheet> {
               ),
             ),
           ),
-          const Text(
-            'Target Event',
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text(
+                'Target Event',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
+              ),
+              userProfileAsync.when(
+                data: (profile) => Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: profile.aiCredits > 0 ? const Color(0xFF4A90E2).withOpacity(0.2) : Colors.red.withOpacity(0.2),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: profile.aiCredits > 0 ? const Color(0xFF4A90E2) : Colors.red,
+                    ),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        Icons.auto_awesome,
+                        size: 14,
+                        color: profile.aiCredits > 0 ? const Color(0xFF4A90E2) : Colors.red,
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        '${profile.aiCredits} AI Credits',
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                          color: profile.aiCredits > 0 ? const Color(0xFF4A90E2) : Colors.red,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                loading: () => const SizedBox.shrink(),
+                error: (_, __) => const SizedBox.shrink(),
+              ),
+            ],
           ),
           const SizedBox(height: 16),
           SingleChildScrollView(
@@ -355,29 +396,126 @@ class _GoalSelectionBottomSheetState extends State<GoalSelectionBottomSheet> {
             ],
           ),
           const SizedBox(height: 32),
-          ElevatedButton(
-            onPressed: () {
-              Navigator.pop(context);
-              context.push('/training', extra: 'Distance: $_selectedDistance, Target Pace: $_formattedPace');
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF4A90E2),
-              padding: const EdgeInsets.symmetric(vertical: 16),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
+          userProfileAsync.when(
+            data: (profile) => ElevatedButton(
+              onPressed: () {
+                if (profile.aiCredits <= 0) {
+                  Navigator.pop(context); // Close bottom sheet
+                  _showPremiumPaywall(context);
+                } else {
+                  Navigator.pop(context);
+                  context.push('/training', extra: 'Distance: $_selectedDistance, Target Pace: $_formattedPace');
+                  // Refresh user profile after generating plan
+                  ref.refresh(userProfileProvider.future);
+                }
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: profile.aiCredits > 0 ? const Color(0xFF4A90E2) : Colors.red[800],
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
+              ),
+              child: Text(
+                profile.aiCredits > 0 ? 'GENERATE AI PLAN' : 'OUT OF CREDITS',
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 1.2,
+                  color: Colors.white,
+                ),
               ),
             ),
-            child: const Text(
-              'GENERATE AI PLAN',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-                letterSpacing: 1.2,
-                color: Colors.white,
-              ),
-            ),
+            loading: () => const Center(child: CircularProgressIndicator()),
+            error: (_, __) => const Center(child: Text('Failed to load profile', style: TextStyle(color: Colors.red))),
           ),
         ],
+      ),
+    );
+  }
+
+  void _showPremiumPaywall(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => Dialog(
+        backgroundColor: const Color(0xFF1A1A1A),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        child: Padding(
+          padding: const EdgeInsets.all(24.0),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFFC4C02).withOpacity(0.1),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.auto_awesome,
+                  color: Color(0xFFFC4C02),
+                  size: 48,
+                ),
+              ),
+              const SizedBox(height: 24),
+              const Text(
+                'Paceflow Premium',
+                style: TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                ),
+              ),
+              const SizedBox(height: 16),
+              const Text(
+                'You\'ve used up your free AI credits! Upgrade to Premium to generate unlimited highly-personalized AI Training Plans, get Live Audio Coaching, and access Fatigue Heatmaps.',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 16,
+                  color: Colors.grey,
+                  height: 1.5,
+                ),
+              ),
+              const SizedBox(height: 32),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: () {
+                    Navigator.pop(context);
+                    // TODO: Implement Premium Checkout
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Checkout coming soon!')),
+                    );
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFFFC4C02),
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                  ),
+                  child: const Text(
+                    'UPGRADE FOR \$9.99/mo',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      letterSpacing: 1.2,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text(
+                  'Maybe Later',
+                  style: TextStyle(color: Colors.grey, fontSize: 16),
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
