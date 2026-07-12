@@ -19,7 +19,7 @@ router.get('/plan', requireAuth, async (req, res) => {
       // Set it as active and return for free
       await prisma.paceflowUser.update({
         where: { id: req.user.id },
-        data: { activePlan: existingPlan.planData, activePlanGoal: goal }
+        data: { activePlan: existingPlan.planData as any, activePlanGoal: goal }
       });
       return res.json({ plan: existingPlan.planData, creditsRemaining: req.user.aiCredits, isCached: true });
     }
@@ -190,7 +190,7 @@ router.post('/active-plan', requireAuth, async (req, res) => {
 
     await prisma.paceflowUser.update({
       where: { id: req.user.id },
-      data: { activePlan: plan.planData, activePlanGoal: plan.goal }
+      data: { activePlan: plan.planData as any, activePlanGoal: plan.goal }
     });
 
     res.json({ success: true, plan: plan.planData, goal: plan.goal });
