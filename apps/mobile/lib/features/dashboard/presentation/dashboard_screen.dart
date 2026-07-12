@@ -225,7 +225,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   padding: const EdgeInsets.symmetric(vertical: 20),
                 ),
               ),
-              ),
             ],
           ),
     );
