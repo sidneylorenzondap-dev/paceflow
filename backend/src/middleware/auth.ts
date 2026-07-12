@@ -22,7 +22,7 @@ export const requireAuth = async (req: Request, res: Response, next: NextFunctio
         data: {
           email: 'mock@example.com',
           subscriptionTier: 'premium',
-          aiCredits: 10
+          aiCredits: 5
         }
       });
     }
@@ -51,7 +51,7 @@ export const requireAuth = async (req: Request, res: Response, next: NextFunctio
           id: user.id,
           email: user.email || '',
           subscriptionTier: 'premium', // Default to premium for MVP
-          aiCredits: 20
+          aiCredits: 5
         }
       });
     }

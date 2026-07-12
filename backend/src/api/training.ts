@@ -141,4 +141,17 @@ router.post('/session/save', requireAuth, async (req, res) => {
   }
 });
 
+router.get('/history', requireAuth, async (req, res) => {
+  try {
+    const history = await prisma.paceflowRunSession.findMany({
+      where: { userId: req.user.id },
+      orderBy: { date: 'desc' }
+    });
+    res.json({ history });
+  } catch (error) {
+    console.error('Fetch History Error:', error);
+    res.status(500).json({ error: 'Failed to fetch run history' });
+  }
+});
+
 export default router;

@@ -5,6 +5,7 @@ import 'package:http/http.dart' as http;
 import '../../../core/constants/api_constants.dart';
 import '../../run/presentation/device_scanner_screen.dart';
 import '../../run/data/ble_service.dart';
+import '../../activities/presentation/activities_screen.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -14,6 +15,7 @@ class DashboardScreen extends StatefulWidget {
 }
 
 class _DashboardScreenState extends State<DashboardScreen> {
+  int _currentIndex = 0;
   bool _isLoadingStrava = false;
 
   Future<void> _importFromStrava() async {
@@ -79,9 +81,42 @@ class _DashboardScreenState extends State<DashboardScreen> {
         ],
       ),
       body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(24.0),
-          child: Column(
+        child: IndexedStack(
+          index: _currentIndex,
+          children: [
+            _buildHomeView(),
+            const ActivitiesScreen(),
+          ],
+        ),
+      ),
+      bottomNavigationBar: BottomNavigationBar(
+        currentIndex: _currentIndex,
+        onTap: (index) {
+          setState(() {
+            _currentIndex = index;
+          });
+        },
+        backgroundColor: Theme.of(context).colorScheme.surface,
+        selectedItemColor: const Color(0xFFFC4C02), // Strava Orange/Paceflow Primary
+        unselectedItemColor: Colors.grey,
+        items: const [
+          BottomNavigationBarItem(
+            icon: Icon(Icons.home_filled),
+            label: 'Home',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.history),
+            label: 'Activities',
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildHomeView() {
+    return Padding(
+      padding: const EdgeInsets.all(24.0),
+      child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               const Text(
@@ -190,10 +225,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   padding: const EdgeInsets.symmetric(vertical: 20),
                 ),
               ),
+              ),
             ],
           ),
-        ),
-      ),
     );
   }
 }
