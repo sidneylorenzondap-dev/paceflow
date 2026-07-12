@@ -29,9 +29,9 @@ model PaceflowUser {
 model PaceflowTrainingPlan {
   id            String       @id @default(uuid())
   userId        String
-  targetDate    DateTime
-  goalTime      Int          // in seconds
-  goalDistance  Float        // in meters
+  goal          String       // E.g., "Distance: 10K, Target Pace: 5:30 /km"
+  planData      Json
+  createdAt     DateTime     @default(now())
   user          PaceflowUser @relation(fields: [userId], references: [id])
 
   @@schema("paceflow")
