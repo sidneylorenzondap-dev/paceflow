@@ -6,6 +6,7 @@ import '../../../core/constants/api_constants.dart';
 import '../../run/presentation/device_scanner_screen.dart';
 import '../../run/data/ble_service.dart';
 import '../../activities/presentation/activities_screen.dart';
+import '../../training/presentation/saved_plans_screen.dart';
 import '../../user/data/user_service.dart';
 
 class DashboardScreen extends StatefulWidget {
@@ -87,6 +88,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           children: [
             _buildHomeView(),
             const ActivitiesScreen(),
+            const SavedPlansScreen(),
           ],
         ),
       ),
@@ -108,6 +110,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
           BottomNavigationBarItem(
             icon: Icon(Icons.history),
             label: 'Activities',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.event_note),
+            label: 'Plans',
           ),
         ],
       ),
