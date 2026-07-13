@@ -68,7 +68,13 @@ class LocationNotifier extends Notifier<LocationState> {
     state = state.copyWith(isTracking: true);
     
     _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
-      state = state.copyWith(elapsedSeconds: state.elapsedSeconds + 1);
+      // MOCK DATA for testing: simulate a 7:00 min/km pace
+      final mockDistanceKm = state.totalDistanceKm + (1.0 / 420.0);
+      state = state.copyWith(
+        elapsedSeconds: state.elapsedSeconds + 1,
+        totalDistanceKm: mockDistanceKm,
+        currentPaceSecondsPerKm: 420.0,
+      );
     });
     
     _positionStreamSubscription = Geolocator.getPositionStream(

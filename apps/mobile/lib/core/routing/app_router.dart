@@ -40,6 +40,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           final isGhostRacing = extra['isGhostRacing'] as bool? ?? false;
           final strictness = extra['strictness'] as String? ?? 'Standard';
           final isBaseline = extra['isBaseline'] as bool? ?? false;
+          final pendingPlanGoal = extra['pendingPlanGoal'] as String?;
           
           return LiveRunScreen(
             targetDistance: targetDistance,
@@ -47,6 +48,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             isGhostRacing: isGhostRacing,
             strictness: strictness,
             isBaseline: isBaseline,
+            pendingPlanGoal: pendingPlanGoal,
           );
         },
       ),
@@ -56,6 +58,8 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           String geoJsonData = "{}";
           double distance = 0.0;
           bool isHistoryView = false;
+          bool isBaseline = false;
+          String? pendingPlanGoal;
           if (state.extra is String) {
             geoJsonData = state.extra as String;
           } else if (state.extra is Map) {
@@ -63,11 +67,15 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             geoJsonData = map['geoJsonData'] ?? "{}";
             distance = map['distance'] ?? 0.0;
             isHistoryView = map['isHistoryView'] ?? false;
+            isBaseline = map['isBaseline'] ?? false;
+            pendingPlanGoal = map['pendingPlanGoal'];
           }
           return PostRunAnalyticsScreen(
             geoJsonData: geoJsonData,
             distanceMeters: distance,
             isHistoryView: isHistoryView,
+            isBaseline: isBaseline,
+            pendingPlanGoal: pendingPlanGoal,
           );
         },
       ),

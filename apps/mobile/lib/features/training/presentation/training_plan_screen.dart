@@ -197,7 +197,9 @@ class _TrainingPlanScreenState extends ConsumerState<TrainingPlanScreen> {
                   'targetDistance': 'Open',
                   'targetPaceSeconds': 420.0,
                   'isGhostRacing': false,
-                  'strictness': 'Standard'
+                  'strictness': 'Standard',
+                  'isBaseline': true,
+                  'pendingPlanGoal': widget.goal
                 });
               },
               style: ElevatedButton.styleFrom(

@@ -14,6 +14,7 @@ class LiveRunScreen extends ConsumerStatefulWidget {
   final bool isGhostRacing;
   final String strictness;
   final bool isBaseline;
+  final String? pendingPlanGoal;
 
   const LiveRunScreen({
     super.key,
@@ -22,6 +23,7 @@ class LiveRunScreen extends ConsumerStatefulWidget {
     this.isGhostRacing = false,
     this.strictness = 'Standard',
     this.isBaseline = false,
+    this.pendingPlanGoal,
   });
 
   @override
@@ -259,7 +261,10 @@ class _LiveRunScreenState extends ConsumerState<LiveRunScreen> {
                         }
 
                         if (widget.isBaseline) {
-                          context.go('/training');
+                          context.push('/analytics', extra: {
+                            'isBaseline': true,
+                            'pendingPlanGoal': widget.pendingPlanGoal
+                          });
                         } else {
                           context.push('/analytics');
                         }

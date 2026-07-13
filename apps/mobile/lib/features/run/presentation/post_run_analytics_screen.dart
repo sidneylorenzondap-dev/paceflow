@@ -11,12 +11,16 @@ class PostRunAnalyticsScreen extends StatefulWidget {
   final String geoJsonData;
   final double distanceMeters;
   final bool isHistoryView;
+  final bool isBaseline;
+  final String? pendingPlanGoal;
 
   const PostRunAnalyticsScreen({
     super.key, 
     required this.geoJsonData,
     this.distanceMeters = 0.0,
     this.isHistoryView = false,
+    this.isBaseline = false,
+    this.pendingPlanGoal,
   });
 
   @override
@@ -39,6 +43,43 @@ class _PostRunAnalyticsScreenState extends State<PostRunAnalyticsScreen> {
   }
 
   void _checkPlanCompletion() {
+    if (widget.isBaseline && widget.pendingPlanGoal != null && !_showedCelebration) {
+      _showedCelebration = true;
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => AlertDialog(
+          backgroundColor: Colors.grey[900],
+          title: const Row(
+            children: [
+              Icon(Icons.auto_awesome, color: Color(0xFFFC4C02), size: 32),
+              SizedBox(width: 8),
+              Text('Baseline Complete!', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+            ],
+          ),
+          content: Text(
+            'Great job! We now have your baseline data for ${widget.pendingPlanGoal}. Are you ready to generate your AI Training Plan?',
+            style: const TextStyle(color: Colors.white70),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Later', style: TextStyle(color: Colors.grey)),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.pop(context);
+                context.push('/training', extra: {'goal': widget.pendingPlanGoal});
+              },
+              style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFFC4C02)),
+              child: const Text('Generate Plan'),
+            ),
+          ],
+        ),
+      );
+      return;
+    }
+
     // Basic mock check: If they ran further than 5000m, they likely broke a baseline record!
     if (!widget.isHistoryView && widget.distanceMeters >= 5000 && !_showedCelebration) {
       _showedCelebration = true;
