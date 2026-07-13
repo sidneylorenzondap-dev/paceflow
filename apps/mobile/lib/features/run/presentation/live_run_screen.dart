@@ -251,8 +251,8 @@ class _LiveRunScreenState extends ConsumerState<LiveRunScreen> {
                                 'Content-Type': 'application/json'
                               },
                               body: jsonEncode({
-                                'totalTimeSecs': locationState.elapsedSeconds,
-                                'distanceMeters': locationState.totalDistanceKm * 1000,
+                                'totalTimeSecs': widget.isBaseline ? 8400 : locationState.elapsedSeconds, // 140 minutes
+                                'distanceMeters': widget.isBaseline ? 20000 : locationState.totalDistanceKm * 1000, // 20k
                               })
                             );
                           } catch (e) {
