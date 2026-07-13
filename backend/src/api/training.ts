@@ -6,6 +6,15 @@ import { requireAuth } from '../middleware/auth';
 const router = Router();
 const aiCoach = new AiCoach();
 
+function parseGoalDistance(goal: string): number {
+  const g = goal.toLowerCase();
+  if (g.includes('full marathon') || g.includes('42k')) return 42195;
+  if (g.includes('half marathon') || g.includes('21k')) return 21097;
+  if (g.includes('10k')) return 10000;
+  if (g.includes('5k')) return 5000;
+  return 5000; // default to 5k
+}
+
 router.get('/plan', requireAuth, async (req, res) => {
   try {
     const goal = (req.query.goal as string) || 'Improve 5K time';
@@ -26,10 +35,31 @@ router.get('/plan', requireAuth, async (req, res) => {
 
     // Check history for baseline
     const history = await prisma.paceflowRunSession.findMany({ where: { userId: req.user.id } });
-    if (history.length === 0) {
+    
+    let maxDistance = 0;
+    const formattedHistory = history.map(h => {
+      // Calculate actual distance in meters: (time_in_mins) / (min_per_km) = km * 1000 = meters
+      const distMeters = Math.round((h.totalTime / 60) / h.avgPace * 1000);
+      if (distMeters > maxDistance) maxDistance = distMeters;
+      
+      return {
+        date: h.date.toISOString(),
+        distanceMeters: distMeters,
+        durationSecs: h.totalTime,
+        avgPaceMinKm: h.avgPace,
+        avgHeartRate: 150, // mock
+        avgCadence: 170    // mock
+      };
+    });
+
+    const targetDistance = parseGoalDistance(goal);
+    // 20% margin
+    if (maxDistance < targetDistance * 0.8) {
+      const requiredK = Math.round((targetDistance * 0.8) / 1000);
+      const targetK = Math.round(targetDistance / 1000);
       return res.status(428).json({ 
         error: 'Baseline test required.', 
-        instruction: 'Please complete a 10-15 minute run at a conversational pace (RPE 3-4 or Talk Test) to establish your baseline fitness.' 
+        instruction: `You are requesting a training plan for ${targetK}K, but your longest recorded run is only ${(maxDistance/1000).toFixed(1)}K. Please complete a baseline run of at least ${requiredK}K to establish your fitness level for this goal.` 
       });
     }
 
@@ -44,13 +74,6 @@ router.get('/plan', requireAuth, async (req, res) => {
     });
 
     // Generate the 1-week training plan using AI
-    const formattedHistory = history.map(h => ({
-      date: h.date.toISOString(),
-      distanceMeters: 5000,
-      durationSecs: h.totalTime,
-      avgHeartRate: 150,
-      avgCadence: 170
-    }));
     const plan = await aiCoach.generateTrainingPlan(goal, formattedHistory);
     
     // Save to PaceflowTrainingPlan and update user's active plan
