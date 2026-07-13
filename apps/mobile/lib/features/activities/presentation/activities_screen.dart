@@ -103,10 +103,12 @@ class ActivitiesScreen extends ConsumerWidget {
                             _buildStatItem('TIME', _formatDuration(session.totalTime)),
                           ],
                         ),
-                      ),
+                      ],
                     ),
-                  );
-                },
+                  ),
+                ),
+              );
+            },
               ),
             );
           },
