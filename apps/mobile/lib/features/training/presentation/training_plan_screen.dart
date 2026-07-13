@@ -1,17 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../data/training_service.dart';
 import '../domain/training_workout.dart';
+import '../data/saved_plan_service.dart';
 
-class TrainingPlanScreen extends StatefulWidget {
+class TrainingPlanScreen extends ConsumerStatefulWidget {
   final String goal;
   const TrainingPlanScreen({super.key, required this.goal});
 
   @override
-  State<TrainingPlanScreen> createState() => _TrainingPlanScreenState();
+  ConsumerState<TrainingPlanScreen> createState() => _TrainingPlanScreenState();
 }
 
-class _TrainingPlanScreenState extends State<TrainingPlanScreen> {
+class _TrainingPlanScreenState extends ConsumerState<TrainingPlanScreen> {
   final TrainingService _service = TrainingService();
   bool _isLoading = true;
   List<TrainingWorkout>? _workouts;
@@ -38,6 +40,7 @@ class _TrainingPlanScreenState extends State<TrainingPlanScreen> {
         _baselineInstruction = response.baselineInstruction ?? 'Run at a conversational pace (RPE 3-4).';
       } else {
         _workouts = response.plan;
+        ref.invalidate(savedPlansProvider);
       }
     });
   }

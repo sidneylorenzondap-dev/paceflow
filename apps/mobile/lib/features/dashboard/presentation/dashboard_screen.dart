@@ -76,6 +76,38 @@ class _DashboardScreenState extends State<DashboardScreen> {
       appBar: AppBar(
         title: const Text('PACEFLOW'),
         actions: [
+          Consumer(
+            builder: (context, ref, child) {
+              final profileAsync = ref.watch(userProfileProvider);
+              return profileAsync.when(
+                data: (profile) => Padding(
+                  padding: const EdgeInsets.only(right: 8.0),
+                  child: Center(
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF4C8DFF).withOpacity(0.2),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: const Color(0xFF4C8DFF)),
+                      ),
+                      child: Row(
+                        children: [
+                          const Icon(Icons.auto_awesome, size: 14, color: Color(0xFF4C8DFF)),
+                          const SizedBox(width: 4),
+                          Text(
+                            '${profile.aiCredits}',
+                            style: const TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF4C8DFF)),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+                loading: () => const SizedBox.shrink(),
+                error: (_, __) => const SizedBox.shrink(),
+              );
+            },
+          ),
           IconButton(
             icon: const Icon(Icons.person_outline),
             onPressed: () {},

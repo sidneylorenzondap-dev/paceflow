@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
+import 'package:go_router/go_router.dart';
 import '../data/activity_service.dart';
 
 class ActivitiesScreen extends ConsumerWidget {
@@ -55,16 +56,27 @@ class ActivitiesScreen extends ConsumerWidget {
                   final session = history[index];
                   final distanceKm = (session.totalTime / session.avgPace) / 60;
 
-                  return Container(
+                  return Card(
+                    color: Colors.transparent,
+                    elevation: 0,
                     margin: const EdgeInsets.only(bottom: 16),
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: Theme.of(context).colorScheme.surface,
+                    child: InkWell(
                       borderRadius: BorderRadius.circular(16),
-                      border: Border.all(
-                        color: Theme.of(context).colorScheme.surfaceVariant,
-                      )
-                    ),
+                      onTap: () {
+                        context.push('/analytics', extra: {
+                          'geoJsonData': "{}", // Mock for now until we have detailed points
+                          'distance': distanceKm * 1000,
+                        });
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: Theme.of(context).colorScheme.surface,
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(
+                            color: Theme.of(context).colorScheme.surfaceVariant,
+                          )
+                        ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -91,7 +103,7 @@ class ActivitiesScreen extends ConsumerWidget {
                             _buildStatItem('TIME', _formatDuration(session.totalTime)),
                           ],
                         ),
-                      ],
+                      ),
                     ),
                   );
                 },
