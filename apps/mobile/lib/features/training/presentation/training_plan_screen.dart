@@ -7,7 +7,8 @@ import '../data/saved_plan_service.dart';
 
 class TrainingPlanScreen extends ConsumerStatefulWidget {
   final String goal;
-  const TrainingPlanScreen({super.key, required this.goal});
+  final String? planId;
+  const TrainingPlanScreen({super.key, required this.goal, this.planId});
 
   @override
   ConsumerState<TrainingPlanScreen> createState() => _TrainingPlanScreenState();
@@ -61,16 +62,59 @@ class _TrainingPlanScreenState extends ConsumerState<TrainingPlanScreen> {
         ),
       ),
       floatingActionButton: (_workouts != null && _workouts!.isNotEmpty)
-          ? FloatingActionButton.extended(
-              onPressed: () {
-                context.push('/training/chat');
-              },
-              backgroundColor: const Color(0xFFFC4C02),
-              icon: const Icon(Icons.chat_bubble_outline),
-              label: const Text('Adjust Plan', style: TextStyle(fontWeight: FontWeight.bold)),
+          ? Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                if (widget.planId != null) ...[
+                  FloatingActionButton.extended(
+                    heroTag: 'set_active',
+                    onPressed: _setActivePlan,
+                    backgroundColor: const Color(0xFF4A90E2),
+                    icon: const Icon(Icons.check_circle_outline),
+                    label: const Text('Set as Active', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white)),
+                  ),
+                  const SizedBox(height: 16),
+                ],
+                FloatingActionButton.extended(
+                  heroTag: 'adjust_plan',
+                  onPressed: () {
+                    context.push('/training/chat');
+                  },
+                  backgroundColor: const Color(0xFFFC4C02),
+                  icon: const Icon(Icons.chat_bubble_outline),
+                  label: const Text('Adjust Plan', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white)),
+                ),
+              ],
             )
           : null,
     );
+  }
+
+  void _setActivePlan() async {
+    if (widget.planId == null) return;
+    try {
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => const Center(child: CircularProgressIndicator(color: Color(0xFF4A90E2))),
+      );
+      final service = ref.read(savedPlanServiceProvider);
+      await service.setActivePlan(widget.planId!);
+      if (mounted) {
+        Navigator.pop(context);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Switched to ${widget.goal}', style: const TextStyle(color: Colors.white))),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        Navigator.pop(context);
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Failed to switch plan', style: TextStyle(color: Colors.white))),
+        );
+      }
+    }
   }
 
   Widget _buildContent() {

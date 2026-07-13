@@ -74,8 +74,16 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/training',
         builder: (context, state) {
-          final goal = state.extra as String? ?? "Sub-20 5K";
-          return TrainingPlanScreen(goal: goal);
+          String goal = "Sub-20 5K";
+          String? planId;
+          if (state.extra is String) {
+            goal = state.extra as String;
+          } else if (state.extra is Map) {
+            final map = state.extra as Map;
+            goal = map['goal'] ?? "Sub-20 5K";
+            planId = map['planId'];
+          }
+          return TrainingPlanScreen(goal: goal, planId: planId);
         },
       ),
       GoRoute(

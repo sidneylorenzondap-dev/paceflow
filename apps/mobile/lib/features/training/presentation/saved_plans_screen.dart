@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
+import 'package:go_router/go_router.dart';
 import '../data/saved_plan_service.dart';
 
 class SavedPlansScreen extends ConsumerWidget {
@@ -72,7 +73,12 @@ class SavedPlansScreen extends ConsumerWidget {
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: InkWell(
         borderRadius: BorderRadius.circular(16),
-        onTap: () => _setActivePlan(context, ref, plan.id, plan.goal),
+        onTap: () {
+          context.push('/training', extra: {
+            'goal': plan.goal,
+            'planId': plan.id,
+          });
+        },
         child: Padding(
           padding: const EdgeInsets.all(16),
           child: Column(
@@ -108,32 +114,5 @@ class SavedPlansScreen extends ConsumerWidget {
         ),
       ),
     );
-  }
-
-  void _setActivePlan(BuildContext context, WidgetRef ref, String planId, String goal) async {
-    try {
-      showDialog(
-        context: context,
-        barrierDismissible: false,
-        builder: (context) => const Center(child: CircularProgressIndicator()),
-      );
-
-      final service = ref.read(savedPlanServiceProvider);
-      await service.setActivePlan(planId);
-      
-      if (context.mounted) {
-        Navigator.pop(context); // hide loading
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Switched to $goal')),
-        );
-      }
-    } catch (e) {
-      if (context.mounted) {
-        Navigator.pop(context); // hide loading
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Failed to switch plan')),
-        );
-      }
-    }
   }
 }
