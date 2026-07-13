@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:http/http.dart' as http;
 import '../../../core/constants/api_constants.dart';
 import '../../run/presentation/device_scanner_screen.dart';
@@ -108,10 +109,52 @@ class _DashboardScreenState extends State<DashboardScreen> {
               );
             },
           ),
-          IconButton(
+          PopupMenuButton<String>(
             icon: const Icon(Icons.person_outline),
-            onPressed: () {},
-          )
+            offset: const Offset(0, 40),
+            color: const Color(0xFF1E1E1E),
+            onSelected: (value) async {
+              if (value == 'logout') {
+                await Supabase.instance.client.auth.signOut();
+                if (context.mounted) {
+                  context.go('/login');
+                }
+              }
+            },
+            itemBuilder: (context) => [
+              const PopupMenuItem(
+                value: 'profile',
+                child: Row(
+                  children: [
+                    Icon(Icons.person, size: 20, color: Colors.white),
+                    SizedBox(width: 8),
+                    Text('Profile Settings', style: TextStyle(color: Colors.white)),
+                  ],
+                ),
+              ),
+              const PopupMenuItem(
+                value: 'preferences',
+                child: Row(
+                  children: [
+                    Icon(Icons.settings, size: 20, color: Colors.white),
+                    SizedBox(width: 8),
+                    Text('Preferences', style: TextStyle(color: Colors.white)),
+                  ],
+                ),
+              ),
+              const PopupMenuDivider(height: 1),
+              const PopupMenuItem(
+                value: 'logout',
+                child: Row(
+                  children: [
+                    Icon(Icons.logout, size: 20, color: Colors.redAccent),
+                    SizedBox(width: 8),
+                    Text('Logout', style: TextStyle(color: Colors.redAccent, fontWeight: FontWeight.bold)),
+                  ],
+                ),
+              ),
+            ],
+          ),
         ],
       ),
       body: SafeArea(
