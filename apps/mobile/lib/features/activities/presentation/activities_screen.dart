@@ -66,6 +66,7 @@ class ActivitiesScreen extends ConsumerWidget {
                         context.push('/analytics', extra: {
                           'geoJsonData': "{}", // Mock for now until we have detailed points
                           'distance': distanceKm * 1000,
+                          'isHistoryView': true,
                         });
                       },
                       child: Container(

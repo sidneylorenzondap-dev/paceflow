@@ -10,11 +10,13 @@ import '../../../core/constants/api_constants.dart';
 class PostRunAnalyticsScreen extends StatefulWidget {
   final String geoJsonData;
   final double distanceMeters;
+  final bool isHistoryView;
 
   const PostRunAnalyticsScreen({
     super.key, 
     required this.geoJsonData,
     this.distanceMeters = 0.0,
+    this.isHistoryView = false,
   });
 
   @override
@@ -38,7 +40,7 @@ class _PostRunAnalyticsScreenState extends State<PostRunAnalyticsScreen> {
 
   void _checkPlanCompletion() {
     // Basic mock check: If they ran further than 5000m, they likely broke a baseline record!
-    if (widget.distanceMeters >= 5000 && !_showedCelebration) {
+    if (!widget.isHistoryView && widget.distanceMeters >= 5000 && !_showedCelebration) {
       _showedCelebration = true;
       showDialog(
         context: context,
