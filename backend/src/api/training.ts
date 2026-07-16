@@ -138,7 +138,7 @@ router.post('/plan/adjust', requireAuth, async (req, res) => {
 
 router.post('/session/save', requireAuth, async (req, res) => {
   try {
-    const { totalTimeSecs, distanceMeters } = req.body;
+    const { totalTimeSecs, distanceMeters, isBaseline } = req.body;
     
     // Fallbacks if Flutter doesn't send them
     const time = totalTimeSecs || 900; // 15 mins
@@ -159,6 +159,7 @@ router.post('/session/save', requireAuth, async (req, res) => {
         date: new Date(),
         totalTime: time,
         avgPace: avgPace,
+        isBaseline: isBaseline || false,
       }
     });
 

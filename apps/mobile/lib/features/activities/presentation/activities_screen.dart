@@ -75,7 +75,9 @@ class ActivitiesScreen extends ConsumerWidget {
                           color: Theme.of(context).colorScheme.surface,
                           borderRadius: BorderRadius.circular(16),
                           border: Border.all(
-                            color: Theme.of(context).colorScheme.surfaceVariant,
+                            color: session.isBaseline 
+                                ? Colors.deepPurple.withOpacity(0.3) 
+                                : Theme.of(context).colorScheme.surfaceVariant,
                           )
                         ),
                     child: Column(
@@ -84,17 +86,36 @@ class ActivitiesScreen extends ConsumerWidget {
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            Text(
-                              DateFormat('MMM d, yyyy • h:mm a').format(session.date),
-                              style: const TextStyle(
-                                color: Colors.grey,
-                                fontSize: 14,
-                                fontWeight: FontWeight.bold,
+                              Text(
+                                DateFormat('MMM d, yyyy • h:mm a').format(session.date),
+                                style: const TextStyle(
+                                  color: Colors.grey,
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.bold,
+                                ),
                               ),
-                            ),
-                            const Icon(Icons.directions_run, color: Color(0xFFFC4C02), size: 20),
-                          ],
-                        ),
+                              if (session.isBaseline)
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                  decoration: BoxDecoration(
+                                    color: Colors.deepPurple.withOpacity(0.2),
+                                    borderRadius: BorderRadius.circular(12),
+                                    border: Border.all(color: Colors.deepPurpleAccent.withOpacity(0.5)),
+                                  ),
+                                  child: const Text(
+                                    'BASELINE',
+                                    style: TextStyle(
+                                      color: Colors.deepPurpleAccent,
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.bold,
+                                      letterSpacing: 1,
+                                    ),
+                                  ),
+                                )
+                              else
+                                const Icon(Icons.directions_run, color: Color(0xFFFC4C02), size: 20),
+                            ],
+                          ),
                         const SizedBox(height: 16),
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,

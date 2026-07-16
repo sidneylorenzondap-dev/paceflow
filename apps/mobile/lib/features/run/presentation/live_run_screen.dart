@@ -80,21 +80,32 @@ class _LiveRunScreenState extends ConsumerState<LiveRunScreen> {
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                     decoration: BoxDecoration(
-                      color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
+                      color: widget.isBaseline 
+                          ? Colors.deepPurple.withOpacity(0.1)
+                          : Theme.of(context).colorScheme.primary.withOpacity(0.1),
                       borderRadius: BorderRadius.circular(20),
+                      border: widget.isBaseline ? Border.all(color: Colors.deepPurple.withOpacity(0.5)) : null,
                     ),
                     child: Row(
                       children: [
                         Icon(
-                          state.isRunning ? Icons.satellite_alt_rounded : Icons.satellite_alt_outlined, 
+                          widget.isBaseline 
+                              ? Icons.biotech 
+                              : (state.isRunning ? Icons.satellite_alt_rounded : Icons.satellite_alt_outlined), 
                           size: 16, 
-                          color: state.isRunning ? Theme.of(context).colorScheme.primary : Colors.grey
+                          color: widget.isBaseline 
+                              ? Colors.deepPurpleAccent
+                              : (state.isRunning ? Theme.of(context).colorScheme.primary : Colors.grey)
                         ),
                         const SizedBox(width: 8),
                         Text(
-                          state.isRunning ? 'GPS ACTIVE' : 'GPS STANDBY',
+                          widget.isBaseline 
+                              ? 'BASELINE TEST' 
+                              : (state.isRunning ? 'GPS ACTIVE' : 'GPS STANDBY'),
                           style: TextStyle(
-                            color: state.isRunning ? Theme.of(context).colorScheme.primary : Colors.grey,
+                            color: widget.isBaseline 
+                                ? Colors.deepPurpleAccent
+                                : (state.isRunning ? Theme.of(context).colorScheme.primary : Colors.grey),
                             fontWeight: FontWeight.bold,
                             fontSize: 12,
                             letterSpacing: 1,
@@ -142,7 +153,22 @@ class _LiveRunScreenState extends ConsumerState<LiveRunScreen> {
                 ),
               ),
               
-              const SizedBox(height: 64),
+              const SizedBox(height: 16),
+              if (widget.isBaseline)
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  margin: const EdgeInsets.only(bottom: 16),
+                  decoration: BoxDecoration(
+                    color: Colors.deepPurple.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: const Text(
+                    'Run comfortably but at a steady, pushing pace. The AI will use this to calibrate your 100% effort baseline.',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(color: Colors.deepPurpleAccent, fontSize: 13, fontStyle: FontStyle.italic),
+                  ),
+                ),
+              if (!widget.isBaseline) const SizedBox(height: 32),
               
               // Metrics Grid
               Row(
@@ -253,6 +279,7 @@ class _LiveRunScreenState extends ConsumerState<LiveRunScreen> {
                               body: jsonEncode({
                                 'totalTimeSecs': widget.isBaseline ? 8400 : locationState.elapsedSeconds, // 140 minutes
                                 'distanceMeters': widget.isBaseline ? 20000 : locationState.totalDistanceKm * 1000, // 20k
+                                'isBaseline': widget.isBaseline,
                               })
                             );
                           } catch (e) {

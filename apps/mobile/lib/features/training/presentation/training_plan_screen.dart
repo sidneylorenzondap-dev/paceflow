@@ -119,14 +119,64 @@ class _TrainingPlanScreenState extends ConsumerState<TrainingPlanScreen> {
 
   Widget _buildContent() {
     if (_isLoading) {
-      return const Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            CircularProgressIndicator(color: Color(0xFFFC4C02)),
-            SizedBox(height: 16),
-            Text('Analyzing history & generating plan...', style: TextStyle(color: Colors.grey)),
-          ],
+      return Center(
+        child: Container(
+          padding: const EdgeInsets.all(32),
+          decoration: BoxDecoration(
+            color: Colors.grey[900],
+            borderRadius: BorderRadius.circular(24),
+            border: Border.all(color: const Color(0xFFFC4C02).withOpacity(0.3)),
+            boxShadow: [
+              BoxShadow(
+                color: const Color(0xFFFC4C02).withOpacity(0.1),
+                blurRadius: 32,
+                spreadRadius: 8,
+              ),
+            ],
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Stack(
+                alignment: Alignment.center,
+                children: [
+                  const SizedBox(
+                    width: 80,
+                    height: 80,
+                    child: CircularProgressIndicator(
+                      color: Color(0xFFFC4C02),
+                      strokeWidth: 2,
+                    ),
+                  ),
+                  Icon(
+                    Icons.auto_awesome,
+                    color: const Color(0xFFFC4C02).withOpacity(0.8),
+                    size: 32,
+                  ),
+                ],
+              ),
+              const SizedBox(height: 32),
+              const Text(
+                'Crafting Your Plan',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 1,
+                ),
+              ),
+              const SizedBox(height: 12),
+              const Text(
+                'Analyzing your history and\ncalibrating AI targets...',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  color: Colors.white60,
+                  fontSize: 14,
+                  height: 1.5,
+                ),
+              ),
+            ],
+          ),
         ),
       );
     }

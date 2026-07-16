@@ -4,6 +4,7 @@ class RunSession {
   final DateTime date;
   final int totalTime;
   final double avgPace;
+  final bool isBaseline;
 
   RunSession({
     required this.id,
@@ -11,6 +12,7 @@ class RunSession {
     required this.date,
     required this.totalTime,
     required this.avgPace,
+    this.isBaseline = false,
   });
 
   factory RunSession.fromJson(Map<String, dynamic> json) {
@@ -20,6 +22,7 @@ class RunSession {
       date: DateTime.parse(json['date']),
       totalTime: json['totalTime'],
       avgPace: (json['avgPace'] as num).toDouble(),
+      isBaseline: json['isBaseline'] ?? false,
     );
   }
 }
