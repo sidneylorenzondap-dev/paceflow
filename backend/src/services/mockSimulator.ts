@@ -54,12 +54,7 @@ export const startMockSimulation = (
       }
     }
 
-    // Stop after 30 seconds
-    if (tick > 30) {
-      clearInterval(intervalId);
-      console.log('[MockSimulator] Finished mock telemetry stream.');
-      ws.send(JSON.stringify({ type: 'SIMULATION_COMPLETE' }));
-    }
+
   }, 1000); // Emit 1 sample per second for the mock
 
   ws.on('close', () => {
