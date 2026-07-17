@@ -8,6 +8,7 @@ import '../../run/presentation/device_scanner_screen.dart';
 import '../../run/data/ble_service.dart';
 import '../../activities/presentation/activities_screen.dart';
 import '../../training/presentation/saved_plans_screen.dart';
+import '../../training/data/saved_plan_service.dart';
 import '../../user/data/user_service.dart';
 
 class DashboardScreen extends StatefulWidget {
@@ -365,6 +366,20 @@ class _GoalSelectionBottomSheetState extends ConsumerState<GoalSelectionBottomSh
   @override
   Widget build(BuildContext context) {
     final userProfileAsync = ref.watch(userProfileProvider);
+    final savedPlansAsync = ref.watch(savedPlansProvider);
+    
+    String? existingGoalPace;
+    if (savedPlansAsync.value != null) {
+      final existingPlan = savedPlansAsync.value!.where((p) => p.goal.contains('Distance: $_selectedDistance')).firstOrNull;
+      if (existingPlan != null) {
+        final match = RegExp(r'Target Pace:\s*(.*? /km)').firstMatch(existingPlan.goal);
+        if (match != null) {
+          existingGoalPace = match.group(1);
+        } else {
+          existingGoalPace = 'set';
+        }
+      }
+    }
 
     return Container(
       decoration: BoxDecoration(
@@ -466,6 +481,20 @@ class _GoalSelectionBottomSheetState extends ConsumerState<GoalSelectionBottomSh
             'Target Pace',
             style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
           ),
+          if (existingGoalPace != null)
+            Padding(
+              padding: const EdgeInsets.only(top: 4.0),
+              child: Row(
+                children: [
+                  const Icon(Icons.info_outline, color: Colors.amber, size: 14),
+                  const SizedBox(width: 4),
+                  Text(
+                    'You already have a plan for $_selectedDistance at $existingGoalPace',
+                    style: const TextStyle(fontSize: 12, color: Colors.amber),
+                  ),
+                ],
+              ),
+            ),
           const SizedBox(height: 24),
           Center(
             child: Text(
