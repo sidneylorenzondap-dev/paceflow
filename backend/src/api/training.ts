@@ -8,8 +8,8 @@ const aiCoach = new AiCoach();
 
 function parseGoalDistance(goal: string): number {
   const g = goal.toLowerCase();
-  if (g.includes('full marathon') || g.includes('42k')) return 42195;
   if (g.includes('half marathon') || g.includes('21k')) return 21097;
+  if (g.includes('marathon') || g.includes('42k')) return 42195;
   if (g.includes('10k')) return 10000;
   if (g.includes('5k')) return 5000;
   return 5000; // default to 5k
@@ -53,9 +53,14 @@ router.get('/plan', requireAuth, async (req, res) => {
     });
 
     const targetDistance = parseGoalDistance(goal);
-    // 20% margin
-    if (maxDistance < targetDistance * 0.8) {
-      const requiredK = Math.round((targetDistance * 0.8) / 1000);
+    // 20% margin, but capped at 10km (nobody should run 33km just for a baseline test)
+    let requiredDistance = targetDistance * 0.8;
+    if (requiredDistance > 10000) {
+      requiredDistance = 10000;
+    }
+
+    if (maxDistance < requiredDistance) {
+      const requiredK = Math.round(requiredDistance / 1000);
       const targetK = Math.round(targetDistance / 1000);
       return res.status(428).json({ 
         error: 'Baseline test required.', 

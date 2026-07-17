@@ -100,6 +100,7 @@ export class AiCoach {
         CRITICAL INSTRUCTION FOR AMBITIOUS GOALS: 
         Compare the user's requested "Target Pace" against their actual average paces (avgPaceMinKm) in their history.
         If their requested pace is significantly faster than their current baseline (e.g., they want 4:00/km but currently run 8:00/km), you MUST adjust their goal pace to something realistic and attainable for a 1-week block to prevent burnout and injury. 
+        IMPORTANT PACING RULE: If the user's history is for a shorter distance (e.g., a 10K baseline) and their goal is much longer (e.g., a Marathon), you MUST extrapolate their pace using standard endurance degradation principles (like Riegel's formula). Their Marathon pace will inherently be slower than their 10K pace. Do not use their 10K pace directly for Marathon workouts without scaling.
         If you adjust the pace, you MUST include an encouraging explanation in the 'goalAdjustmentNotice' field. Example: "I noticed your baseline is 8:00/km, so I've adjusted this week's target pace to a more attainable 7:30/km to build endurance safely."
         If you did NOT adjust the goal pace, leave 'goalAdjustmentNotice' as null.
 
