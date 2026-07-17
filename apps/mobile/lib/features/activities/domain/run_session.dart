@@ -15,6 +15,13 @@ class RunSession {
     this.isBaseline = false,
   });
 
+  double get distanceMeters {
+    if (avgPace == 0) return 0;
+    return ((totalTime / 60) / avgPace) * 1000;
+  }
+
+  double get distanceKm => distanceMeters / 1000;
+
   factory RunSession.fromJson(Map<String, dynamic> json) {
     return RunSession(
       id: json['id'],

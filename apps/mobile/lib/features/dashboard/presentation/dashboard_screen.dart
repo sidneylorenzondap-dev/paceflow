@@ -7,6 +7,7 @@ import '../../../core/constants/api_constants.dart';
 import '../../run/presentation/device_scanner_screen.dart';
 import '../../run/data/ble_service.dart';
 import '../../activities/presentation/activities_screen.dart';
+import '../../activities/data/activity_service.dart';
 import '../../training/presentation/saved_plans_screen.dart';
 import '../../training/data/saved_plan_service.dart';
 import '../../user/data/user_service.dart';
@@ -250,6 +251,16 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 ),
               ),
               const SizedBox(height: 16),
+              
+              // Personal Records
+              const Text(
+                'Personal Records',
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 16),
+              const PersonalRecordsWidget(),
+              const SizedBox(height: 32),
+
               SizedBox(
                 width: double.infinity,
                 height: 56,
@@ -340,6 +351,104 @@ class _DashboardScreenState extends State<DashboardScreen> {
               ),
             ],
           ),
+    );
+  }
+}
+
+class PersonalRecordsWidget extends ConsumerWidget {
+  const PersonalRecordsWidget({super.key});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final historyAsync = ref.watch(runHistoryProvider);
+
+    return historyAsync.when(
+      loading: () => const Center(child: CircularProgressIndicator()),
+      error: (e, st) => Center(child: Text('Error loading records', style: TextStyle(color: Colors.grey))),
+      data: (history) {
+        if (history.isEmpty) {
+          return const Center(child: Text('No runs yet. Start running to set records!', style: TextStyle(color: Colors.grey)));
+        }
+
+        // Buckets
+        double? pb5k;
+        double? pb10k;
+        double? pbHalf;
+        double? pbFull;
+
+        for (final run in history) {
+          final dist = run.distanceMeters;
+          final pace = run.avgPace;
+          
+          if (dist >= 4500 && dist <= 5500) {
+            if (pb5k == null || pace < pb5k) pb5k = pace;
+          } else if (dist >= 9500 && dist <= 10500) {
+            if (pb10k == null || pace < pb10k) pb10k = pace;
+          } else if (dist >= 20000 && dist <= 22000) {
+            if (pbHalf == null || pace < pbHalf) pbHalf = pace;
+          } else if (dist >= 40000 && dist <= 45000) {
+            if (pbFull == null || pace < pbFull) pbFull = pace;
+          }
+        }
+
+        String formatPace(double? pace) {
+          if (pace == null) return '--:--';
+          final minutes = pace.floor();
+          final seconds = ((pace - minutes) * 60).round();
+          return '$minutes:${seconds.toString().padLeft(2, '0')} /km';
+        }
+
+        Widget buildRecordCard(String title, double? pace, IconData icon) {
+          final hasRecord = pace != null;
+          return Container(
+            width: 140,
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: hasRecord ? const Color(0xFF1E1E1E) : Colors.transparent,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(
+                color: hasRecord ? const Color(0xFFFC4C02).withOpacity(0.5) : Colors.white10,
+              ),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Icon(icon, size: 20, color: hasRecord ? const Color(0xFFFC4C02) : Colors.grey),
+                    const SizedBox(width: 8),
+                    Text(title, style: TextStyle(color: hasRecord ? Colors.white : Colors.grey, fontWeight: FontWeight.bold)),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  formatPace(pace),
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: hasRecord ? Colors.white : Colors.grey[700],
+                  ),
+                ),
+              ],
+            ),
+          );
+        }
+
+        return SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: Row(
+            children: [
+              buildRecordCard('5K', pb5k, Icons.flash_on),
+              const SizedBox(width: 12),
+              buildRecordCard('10K', pb10k, Icons.directions_run),
+              const SizedBox(width: 12),
+              buildRecordCard('Half', pbHalf, Icons.workspace_premium),
+              const SizedBox(width: 12),
+              buildRecordCard('Full', pbFull, Icons.emoji_events),
+            ],
+          ),
+        );
+      },
     );
   }
 }
