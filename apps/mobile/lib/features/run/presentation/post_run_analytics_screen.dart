@@ -185,6 +185,10 @@ class _PostRunAnalyticsScreenState extends State<PostRunAnalyticsScreen> {
         title: const Text('Post-Run Analytics', style: TextStyle(fontFamily: 'Outfit', fontWeight: FontWeight.bold)),
         backgroundColor: Colors.transparent,
         elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => context.go('/dashboard'),
+        ),
       ),
       body: Column(
         children: [

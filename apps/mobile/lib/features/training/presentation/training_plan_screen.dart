@@ -54,6 +54,10 @@ class _TrainingPlanScreenState extends ConsumerState<TrainingPlanScreen> {
         title: const Text('AI Training Plan', style: TextStyle(fontFamily: 'Outfit', fontWeight: FontWeight.bold)),
         backgroundColor: Colors.transparent,
         elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => context.go('/dashboard'),
+        ),
       ),
       body: SafeArea(
         child: Padding(
