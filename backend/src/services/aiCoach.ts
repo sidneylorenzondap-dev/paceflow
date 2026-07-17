@@ -108,10 +108,11 @@ export class AiCoach {
         If the user does not have a heart rate monitor, specify effort using RPE (Rate of Perceived Exertion) and the "Talk Test" (e.g., "Run at a pace where you can comfortably hold a conversation").
         
         OUTPUT EXACTLY AND ONLY VALID JSON. DO NOT WRAP IN MARKDOWN BACKTICKS. DO NOT INCLUDE ANY OTHER TEXT.
-        The JSON MUST be an object with two fields: 'goalAdjustmentNotice' (string or null) and 'workouts' (an array of exactly 7 objects, representing Monday to Sunday).
+        The JSON MUST be an object with three fields: 'goalAdjustmentNotice' (string or null), 'adjustedTargetPace' (string like '7:30 /km' or null), and 'workouts' (an array of exactly 7 objects, representing Monday to Sunday).
         Schema:
         {
           "goalAdjustmentNotice": "string explaining adjustment, or null",
+          "adjustedTargetPace": "string representing the new target pace if adjusted, else null",
           "workouts": [
             {
               "day": "Monday",
@@ -153,10 +154,11 @@ export class AiCoach {
         Adjust the plan logically to accommodate their request. (e.g., if they are sick, turn today into a Rest day and shift workouts. If it's too hard, make it easier).
         
         OUTPUT EXACTLY AND ONLY VALID JSON. DO NOT WRAP IN MARKDOWN BACKTICKS. DO NOT INCLUDE ANY OTHER TEXT.
-        The JSON MUST be an object with two fields: 'goalAdjustmentNotice' (string or null) and 'workouts' (an array of exactly 7 objects, representing Monday to Sunday).
+        The JSON MUST be an object with three fields: 'goalAdjustmentNotice' (string or null), 'adjustedTargetPace' (string like '7:30 /km' or null), and 'workouts' (an array of exactly 7 objects, representing Monday to Sunday).
         Schema:
         {
           "goalAdjustmentNotice": "string explaining adjustment if you adjusted their overall goal, or null",
+          "adjustedTargetPace": "string representing the new target pace if adjusted, else null",
           "workouts": [
             {
               "day": "Monday",

@@ -478,14 +478,30 @@ class _GoalSelectionBottomSheetState extends ConsumerState<GoalSelectionBottomSh
     final savedPlansAsync = ref.watch(savedPlansProvider);
     
     String? existingGoalPace;
+    String? existingPlanId;
+    String? existingPlanGoalString;
+
     if (savedPlansAsync.value != null) {
       final existingPlan = savedPlansAsync.value!.where((p) => p.goal.contains('Distance: $_selectedDistance')).firstOrNull;
       if (existingPlan != null) {
-        final match = RegExp(r'Target Pace:\s*(.*? /km)').firstMatch(existingPlan.goal);
-        if (match != null) {
-          existingGoalPace = match.group(1);
+        existingPlanId = existingPlan.id;
+        existingPlanGoalString = existingPlan.goal;
+
+        // Try to get adjusted target pace first from planData
+        String? adjustedPace;
+        if (existingPlan.planData is Map && existingPlan.planData['adjustedTargetPace'] != null) {
+          adjustedPace = existingPlan.planData['adjustedTargetPace'] as String;
+        }
+
+        if (adjustedPace != null && adjustedPace.isNotEmpty) {
+          existingGoalPace = adjustedPace;
         } else {
-          existingGoalPace = 'set';
+          final match = RegExp(r'Target Pace:\s*(.*? /km)').firstMatch(existingPlan.goal);
+          if (match != null) {
+            existingGoalPace = match.group(1);
+          } else {
+            existingGoalPace = 'set';
+          }
         }
       }
     }
@@ -591,20 +607,52 @@ class _GoalSelectionBottomSheetState extends ConsumerState<GoalSelectionBottomSh
             style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
           ),
           if (existingGoalPace != null)
-            Padding(
-              padding: const EdgeInsets.only(top: 4.0),
-              child: Row(
+            Container(
+              margin: const EdgeInsets.only(top: 8.0, bottom: 8.0),
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.amber.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: Colors.amber.withOpacity(0.5)),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Icon(Icons.info_outline, color: Colors.amber, size: 14),
-                  const SizedBox(width: 4),
-                  Text(
-                    'You already have a plan for $_selectedDistance at $existingGoalPace',
-                    style: const TextStyle(fontSize: 12, color: Colors.amber),
+                  Row(
+                    children: [
+                      const Icon(Icons.info_outline, color: Colors.amber, size: 16),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          'You already have a plan for $_selectedDistance at $existingGoalPace',
+                          style: const TextStyle(fontSize: 13, color: Colors.amber, fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  SizedBox(
+                    width: double.infinity,
+                    child: OutlinedButton(
+                      onPressed: () {
+                        context.pop();
+                        context.push('/training', extra: {
+                          'goal': existingPlanGoalString,
+                          'planId': existingPlanId,
+                        });
+                      },
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: Colors.amber,
+                        side: const BorderSide(color: Colors.amber),
+                        padding: const EdgeInsets.symmetric(vertical: 8),
+                      ),
+                      child: const Text('View Plan', style: TextStyle(fontWeight: FontWeight.bold)),
+                    ),
                   ),
                 ],
               ),
             ),
-          const SizedBox(height: 24),
+          const SizedBox(height: 16),
           Center(
             child: Text(
               _formattedPace,
