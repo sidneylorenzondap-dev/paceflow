@@ -100,22 +100,26 @@ export class AiCoach {
         CRITICAL INSTRUCTION FOR AMBITIOUS GOALS: 
         Compare the user's requested "Target Pace" against their actual average paces (avgPaceMinKm) in their history.
         If their requested pace is significantly faster than their current baseline (e.g., they want 4:00/km but currently run 8:00/km), you MUST adjust their goal pace to something realistic and attainable for a 1-week block to prevent burnout and injury. 
-        If you adjust the pace, you MUST prepend an encouraging explanation to the 'description' of Monday's workout starting with "COACH NOTE: ". Example: "COACH NOTE: I noticed your baseline is 8:00/km, so I've adjusted this week's target pace to a more attainable 7:30/km to build endurance safely. [Rest of description]"
+        If you adjust the pace, you MUST include an encouraging explanation in the 'goalAdjustmentNotice' field. Example: "I noticed your baseline is 8:00/km, so I've adjusted this week's target pace to a more attainable 7:30/km to build endurance safely."
+        If you did NOT adjust the goal pace, leave 'goalAdjustmentNotice' as null.
 
         Adhere STRICTLY to verified coaching methodologies (e.g. the 80/20 rule where 80% of runs are easy, 20% are hard).
         If the user does not have a heart rate monitor, specify effort using RPE (Rate of Perceived Exertion) and the "Talk Test" (e.g., "Run at a pace where you can comfortably hold a conversation").
         
         OUTPUT EXACTLY AND ONLY VALID JSON. DO NOT WRAP IN MARKDOWN BACKTICKS. DO NOT INCLUDE ANY OTHER TEXT.
-        The JSON MUST be an array of exactly 7 objects, representing Monday to Sunday.
+        The JSON MUST be an object with two fields: 'goalAdjustmentNotice' (string or null) and 'workouts' (an array of exactly 7 objects, representing Monday to Sunday).
         Schema:
-        [
-          {
-            "day": "Monday",
-            "type": "Easy" | "Interval" | "Long" | "Rest",
-            "description": "Short description of the workout (including COACH NOTE if applicable)",
-            "targetDistanceMeters": 5000 // optional number if applicable
-          }
-        ]
+        {
+          "goalAdjustmentNotice": "string explaining adjustment, or null",
+          "workouts": [
+            {
+              "day": "Monday",
+              "type": "Easy" | "Interval" | "Long" | "Rest",
+              "description": "Short description of the workout",
+              "targetDistanceMeters": 5000 // optional number if applicable
+            }
+          ]
+        }
       `;
 
       const result = await this.model.generateContent(prompt);
@@ -135,7 +139,7 @@ export class AiCoach {
     }
   }
 
-  public async adjustTrainingPlan(currentPlan: any[], userFeedback: string): Promise<any> {
+  public async adjustTrainingPlan(currentPlan: any, userFeedback: string): Promise<any> {
     try {
       const prompt = `
         Act as an elite Olympic running coach. 
@@ -148,16 +152,19 @@ export class AiCoach {
         Adjust the plan logically to accommodate their request. (e.g., if they are sick, turn today into a Rest day and shift workouts. If it's too hard, make it easier).
         
         OUTPUT EXACTLY AND ONLY VALID JSON. DO NOT WRAP IN MARKDOWN BACKTICKS. DO NOT INCLUDE ANY OTHER TEXT.
-        The JSON MUST be an array of exactly 7 objects, representing Monday to Sunday.
+        The JSON MUST be an object with two fields: 'goalAdjustmentNotice' (string or null) and 'workouts' (an array of exactly 7 objects, representing Monday to Sunday).
         Schema:
-        [
-          {
-            "day": "Monday",
-            "type": "Easy" | "Interval" | "Long" | "Rest",
-            "description": "Short description of the workout (e.g., '30 min easy run, conversational pace')",
-            "targetDistanceMeters": 5000
-          }
-        ]
+        {
+          "goalAdjustmentNotice": "string explaining adjustment if you adjusted their overall goal, or null",
+          "workouts": [
+            {
+              "day": "Monday",
+              "type": "Easy" | "Interval" | "Long" | "Rest",
+              "description": "Short description of the workout (e.g., '30 min easy run, conversational pace')",
+              "targetDistanceMeters": 5000
+            }
+          ]
+        }
       `;
 
       const result = await this.model.generateContent(prompt);

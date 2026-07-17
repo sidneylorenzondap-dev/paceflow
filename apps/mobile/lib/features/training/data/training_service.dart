@@ -6,12 +6,14 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 class TrainingServiceResponse {
   final List<TrainingWorkout>? plan;
+  final String? adjustmentNotice;
   final bool requiresBaseline;
   final String? errorMessage;
   final String? baselineInstruction;
 
   TrainingServiceResponse({
     this.plan,
+    this.adjustmentNotice,
     this.requiresBaseline = false,
     this.errorMessage,
     this.baselineInstruction,
@@ -33,10 +35,18 @@ class TrainingService {
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        final planList = (data['plan'] as List)
-            .map((e) => TrainingWorkout.fromJson(e))
-            .toList();
-        return TrainingServiceResponse(plan: planList);
+        List planList = [];
+        String? notice;
+        
+        if (data['plan'] is List) {
+          planList = data['plan'] as List;
+        } else if (data['plan'] is Map) {
+          planList = data['plan']['workouts'] as List? ?? [];
+          notice = data['plan']['goalAdjustmentNotice'] as String?;
+        }
+
+        final parsedList = planList.map((e) => TrainingWorkout.fromJson(e)).toList();
+        return TrainingServiceResponse(plan: parsedList, adjustmentNotice: notice);
       } else if (response.statusCode == 428) {
         final data = jsonDecode(response.body);
         return TrainingServiceResponse(
@@ -70,10 +80,18 @@ class TrainingService {
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        final planList = (data['plan'] as List)
-            .map((e) => TrainingWorkout.fromJson(e))
-            .toList();
-        return TrainingServiceResponse(plan: planList);
+        List planList = [];
+        String? notice;
+        
+        if (data['plan'] is List) {
+          planList = data['plan'] as List;
+        } else if (data['plan'] is Map) {
+          planList = data['plan']['workouts'] as List? ?? [];
+          notice = data['plan']['goalAdjustmentNotice'] as String?;
+        }
+
+        final parsedList = planList.map((e) => TrainingWorkout.fromJson(e)).toList();
+        return TrainingServiceResponse(plan: parsedList, adjustmentNotice: notice);
       } else {
         return TrainingServiceResponse(
             errorMessage: 'Failed to adjust plan: ${response.statusCode}');

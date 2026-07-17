@@ -20,6 +20,7 @@ class _TrainingPlanScreenState extends ConsumerState<TrainingPlanScreen> {
   List<TrainingWorkout>? _workouts;
   bool _requiresBaseline = false;
   String _baselineInstruction = '';
+  String? _adjustmentNotice;
   String _errorMessage = '';
 
   @override
@@ -41,6 +42,7 @@ class _TrainingPlanScreenState extends ConsumerState<TrainingPlanScreen> {
         _baselineInstruction = response.baselineInstruction ?? 'Run at a conversational pace (RPE 3-4).';
       } else {
         _workouts = response.plan;
+        _adjustmentNotice = response.adjustmentNotice;
         ref.invalidate(savedPlansProvider);
       }
     });
@@ -199,12 +201,48 @@ class _TrainingPlanScreenState extends ConsumerState<TrainingPlanScreen> {
       return const Center(child: Text('No plan available.', style: TextStyle(color: Colors.grey)));
     }
 
-    return ListView.builder(
-      itemCount: _workouts!.length,
-      itemBuilder: (context, index) {
-        final workout = _workouts![index];
-        return _buildWorkoutCard(workout);
-      },
+    return Column(
+      children: [
+        if (_adjustmentNotice != null && _adjustmentNotice!.isNotEmpty)
+          Container(
+            padding: const EdgeInsets.all(16),
+            margin: const EdgeInsets.only(bottom: 16),
+            decoration: BoxDecoration(
+              color: const Color(0xFFFC4C02).withOpacity(0.1),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: const Color(0xFFFC4C02).withOpacity(0.5)),
+            ),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Icon(Icons.psychology, color: Color(0xFFFC4C02), size: 24),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text('AI Coach Note', style: TextStyle(color: Color(0xFFFC4C02), fontWeight: FontWeight.bold, fontSize: 16)),
+                      const SizedBox(height: 4),
+                      Text(
+                        _adjustmentNotice!,
+                        style: const TextStyle(color: Colors.white, fontSize: 14, height: 1.4),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        Expanded(
+          child: ListView.builder(
+            itemCount: _workouts!.length,
+            itemBuilder: (context, index) {
+              final workout = _workouts![index];
+              return _buildWorkoutCard(workout);
+            },
+          ),
+        ),
+      ],
     );
   }
 
