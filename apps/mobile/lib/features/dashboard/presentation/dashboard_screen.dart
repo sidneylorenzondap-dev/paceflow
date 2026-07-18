@@ -243,8 +243,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 index: _currentIndex,
                 children: [
                   _buildHomeDesktopView(),
-                  const ActivitiesScreen(),
                   const SavedPlansScreen(),
+                  Container(), // Live Run Placeholder
+                  const ActivitiesScreen(), // Analytics Placeholder
                 ],
               ),
             ),
@@ -260,33 +261,80 @@ class _DashboardScreenState extends State<DashboardScreen> {
       color: AppTheme.backgroundColor,
       padding: const EdgeInsets.symmetric(vertical: 32, horizontal: 16),
       decoration: const BoxDecoration(
-        border: Border(right: BorderSide(color: AppTheme.primaryColor, width: 2)),
+        border: Border(right: BorderSide(color: Color(0xFF333333), width: 1)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          const Text(
-            'MENU',
-            style: TextStyle(
-              color: AppTheme.secondaryTextColor,
-              fontFamily: 'Unbounded',
-              fontWeight: FontWeight.w900,
-              fontSize: 12,
-              letterSpacing: 2,
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: const BoxDecoration(
+                  color: AppTheme.primaryColor,
+                ),
+                child: const Text('PF', style: TextStyle(color: Colors.black, fontFamily: 'Unbounded', fontWeight: FontWeight.w900, fontSize: 16)),
+              ),
+              const SizedBox(width: 12),
+              const Text('PACEFLOW', style: TextStyle(color: Colors.white, fontFamily: 'Unbounded', fontWeight: FontWeight.w900, fontSize: 18)),
+            ],
+          ),
+          const SizedBox(height: 48),
+          _buildSidebarItem(Icons.home_filled, 'DASHBOARD', 0),
+          const SizedBox(height: 16),
+          _buildSidebarItem(Icons.crop_square, 'PLAN', 1),
+          const SizedBox(height: 16),
+          _buildSidebarItem(Icons.circle, 'LIVE RUN', 2, iconSize: 10),
+          const SizedBox(height: 16),
+          _buildSidebarItem(Icons.circle, 'ANALYTICS', 3, iconSize: 10),
+          const Spacer(),
+          // Premium Card
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: const Color(0xFFFF5200), // Orange
+              border: Border.all(color: Colors.black, width: 2),
+              boxShadow: const [BoxShadow(color: Colors.black, offset: Offset(4, 4))],
+            ),
+            child: const Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('PACEFLOW PREMIUM', style: TextStyle(color: Colors.white, fontFamily: 'Unbounded', fontWeight: FontWeight.w900, fontSize: 11)),
+                SizedBox(height: 8),
+                Text('Unlock advanced AI metrics, live ghost pacing & audio recovery engine.', style: TextStyle(color: Colors.white, fontSize: 10, height: 1.4)),
+              ],
             ),
           ),
           const SizedBox(height: 24),
-          _buildSidebarItem(Icons.home_filled, 'HOME', 0),
-          const SizedBox(height: 16),
-          _buildSidebarItem(Icons.history, 'ACTIVITIES', 1),
-          const SizedBox(height: 16),
-          _buildSidebarItem(Icons.event_note, 'PLANS', 2),
+          // Profile section
+          Row(
+            children: [
+              ClipRRect(
+                borderRadius: BorderRadius.circular(4),
+                child: Container(
+                  width: 40,
+                  height: 40,
+                  color: Colors.grey[800],
+                  child: const Icon(Icons.person, color: Colors.white),
+                ),
+              ),
+              const SizedBox(width: 12),
+              const Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('ALEX RUNS', style: TextStyle(color: Colors.white, fontFamily: 'Unbounded', fontWeight: FontWeight.w900, fontSize: 12)),
+                  SizedBox(height: 2),
+                  Text('Premium Member', style: TextStyle(color: AppTheme.secondaryTextColor, fontSize: 10)),
+                ],
+              ),
+            ],
+          ),
         ],
       ),
     );
   }
 
-  Widget _buildSidebarItem(IconData icon, String label, int index) {
+  Widget _buildSidebarItem(IconData icon, String label, int index, {double iconSize = 20}) {
     final isSelected = _currentIndex == index;
     return GestureDetector(
       onTap: () {
@@ -306,7 +354,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         ),
         child: Row(
           children: [
-            Icon(icon, color: isSelected ? Colors.black : AppTheme.secondaryTextColor),
+            Icon(icon, color: isSelected ? Colors.black : AppTheme.secondaryTextColor, size: iconSize),
             const SizedBox(width: 12),
             Text(
               label,
@@ -314,7 +362,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 color: isSelected ? Colors.black : AppTheme.secondaryTextColor,
                 fontFamily: 'Unbounded',
                 fontWeight: FontWeight.w900,
-                fontSize: 14,
+                fontSize: 12,
               ),
             ),
           ],
