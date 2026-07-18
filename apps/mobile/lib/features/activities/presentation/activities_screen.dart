@@ -3,6 +3,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:go_router/go_router.dart';
 import '../data/activity_service.dart';
+import '../../../core/theme/app_theme.dart';
+import '../../../core/ui/neo_brutalist_container.dart';
+import '../../../core/ui/responsive_layout.dart';
+import '../../training/domain/training_workout.dart'; // Ensure data structures exist if needed, otherwise use session.
 
 class ActivitiesScreen extends ConsumerWidget {
   const ActivitiesScreen({super.key});
@@ -11,7 +15,7 @@ class ActivitiesScreen extends ConsumerWidget {
     if (paceSeconds <= 0) return '--:--';
     final minutes = (paceSeconds / 60).floor();
     final seconds = (paceSeconds % 60).floor().toString().padLeft(2, '0');
-    return '$minutes:$seconds /km';
+    return '$minutes:$seconds /KM';
   }
 
   String _formatDuration(int totalSeconds) {
@@ -25,141 +29,335 @@ class ActivitiesScreen extends ConsumerWidget {
     final historyAsync = ref.watch(runHistoryProvider);
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('ACTIVITIES'),
-      ),
+      backgroundColor: const Color(0xFF0E0E10),
       body: SafeArea(
-        child: historyAsync.when(
-          loading: () => const Center(child: CircularProgressIndicator()),
-          error: (error, stack) => Center(
-            child: Text(
-              'Error loading activities: $error',
-              style: const TextStyle(color: Colors.red),
-            ),
-          ),
-          data: (history) {
-            if (history.isEmpty) {
-              return const Center(
-                child: Text(
-                  'No activities yet. Go for a run!',
-                  style: TextStyle(color: Colors.grey, fontSize: 16),
-                ),
-              );
-            }
-
-            return RefreshIndicator(
-              onRefresh: () => ref.refresh(runHistoryProvider.future),
-              child: ListView.builder(
-                padding: const EdgeInsets.all(16.0),
-                itemCount: history.length,
-                itemBuilder: (context, index) {
-                  final session = history[index];
-                  final distanceKm = (session.totalTime / session.avgPace) / 60;
-
-                  return Card(
-                    color: Colors.transparent,
-                    elevation: 0,
-                    margin: const EdgeInsets.only(bottom: 16),
-                    child: InkWell(
-                      borderRadius: BorderRadius.circular(16),
-                      onTap: () {
-                        context.push('/analytics', extra: {
-                          'geoJsonData': "{}", // Mock for now until we have detailed points
-                          'distance': distanceKm * 1000,
-                          'isHistoryView': true,
-                        });
-                      },
-                      child: Container(
-                        padding: const EdgeInsets.all(16),
-                        decoration: BoxDecoration(
-                          color: Theme.of(context).colorScheme.surface,
-                          borderRadius: BorderRadius.circular(16),
-                          border: Border.all(
-                            color: session.isBaseline 
-                                ? Colors.deepPurple.withOpacity(0.3) 
-                                : Theme.of(context).colorScheme.surfaceVariant,
-                          )
-                        ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                              Text(
-                                DateFormat('MMM d, yyyy • h:mm a').format(session.date),
-                                style: const TextStyle(
-                                  color: Colors.grey,
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                              if (session.isBaseline)
-                                Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                                  decoration: BoxDecoration(
-                                    color: Colors.deepPurple.withOpacity(0.2),
-                                    borderRadius: BorderRadius.circular(12),
-                                    border: Border.all(color: Colors.deepPurpleAccent.withOpacity(0.5)),
-                                  ),
-                                  child: const Text(
-                                    'BASELINE',
-                                    style: TextStyle(
-                                      color: Colors.deepPurpleAccent,
-                                      fontSize: 10,
-                                      fontWeight: FontWeight.bold,
-                                      letterSpacing: 1,
-                                    ),
-                                  ),
-                                )
-                              else
-                                const Icon(Icons.directions_run, color: Color(0xFFFC4C02), size: 20),
-                            ],
-                          ),
-                        const SizedBox(height: 16),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            _buildStatItem('DISTANCE', '${distanceKm.toStringAsFixed(2)} km'),
-                            _buildStatItem('PACE', _formatPace(session.avgPace * 60)),
-                            _buildStatItem('TIME', _formatDuration(session.totalTime)),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              );
-            },
-              ),
-            );
-          },
+        child: ResponsiveLayout(
+          mobile: _buildMobileContent(context, ref, historyAsync),
+          desktop: _buildDesktopContent(context, ref, historyAsync),
         ),
       ),
     );
   }
 
-  Widget _buildStatItem(String label, String value) {
+  // --- MOBILE LAYOUT ---
+
+  Widget _buildMobileContent(BuildContext context, WidgetRef ref, AsyncValue<List<dynamic>> historyAsync) {
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          value,
-          style: const TextStyle(
-            fontSize: 20,
-            fontWeight: FontWeight.bold,
-          ),
+        _buildMobileHeader(context),
+        Expanded(
+          child: _buildListOrGrid(context, ref, historyAsync, isMobile: true),
         ),
-        Text(
-          label,
-          style: const TextStyle(
-            color: Colors.grey,
-            fontSize: 10,
-            letterSpacing: 1.5,
-            fontWeight: FontWeight.bold,
+      ],
+    );
+  }
+
+  Widget _buildMobileHeader(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+      decoration: const BoxDecoration(
+        color: Color(0xFF18181C),
+        border: Border(bottom: BorderSide(color: Colors.black, width: 1)),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          GestureDetector(
+            onTap: () => context.go('/dashboard'),
+            child: Row(
+              children: [
+                const Icon(Icons.chevron_left, color: Color(0xFFFC4C02), size: 24),
+                const SizedBox(width: 4),
+                const Text(
+                  'DASHBOARD',
+                  style: TextStyle(color: Color(0xFFFC4C02), fontFamily: 'Unbounded', fontWeight: FontWeight.w900, fontSize: 12),
+                ),
+              ],
+            ),
+          ),
+          const Text(
+            'ACTIVITY HISTORY',
+            style: TextStyle(
+              color: Colors.white,
+              fontFamily: 'Unbounded',
+              fontWeight: FontWeight.w900,
+              fontSize: 14,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // --- DESKTOP LAYOUT ---
+
+  Widget _buildDesktopContent(BuildContext context, WidgetRef ref, AsyncValue<List<dynamic>> historyAsync) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        _buildDesktopSidebar(context),
+        Expanded(
+          child: Padding(
+            padding: const EdgeInsets.all(40.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                _buildDesktopHeader(context),
+                const SizedBox(height: 32),
+                Expanded(
+                  child: _buildListOrGrid(context, ref, historyAsync, isMobile: false),
+                ),
+              ],
+            ),
           ),
         ),
       ],
+    );
+  }
+
+  Widget _buildDesktopSidebar(BuildContext context) {
+    return Container(
+      width: 260,
+      padding: const EdgeInsets.all(24),
+      decoration: const BoxDecoration(
+        color: Color(0xFF18181C),
+        border: Border(right: BorderSide(color: Colors.black, width: 3)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFCCFF00),
+                  border: Border.all(color: Colors.black, width: 2),
+                ),
+                child: const Text('PF', style: TextStyle(color: Colors.black, fontFamily: 'Unbounded', fontWeight: FontWeight.w900, fontSize: 16)),
+              ),
+              const SizedBox(width: 8),
+              const Text('PACEFLOW', style: TextStyle(color: Colors.white, fontFamily: 'Unbounded', fontWeight: FontWeight.w900, fontSize: 20)),
+            ],
+          ),
+          const SizedBox(height: 48),
+          _buildDesktopSidebarItem(context, Icons.crop_square, 'DASHBOARD', '/dashboard', true),
+          const SizedBox(height: 16),
+          _buildDesktopSidebarItem(context, Icons.crop_square, 'PLAN', '/dashboard', false),
+          const SizedBox(height: 16),
+          _buildDesktopSidebarItem(context, Icons.circle, 'LIVE RUN', '/dashboard', false, iconSize: 10),
+          const Spacer(),
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: const Color(0xFFFC4C02),
+              border: Border.all(color: Colors.black, width: 3),
+              boxShadow: const [BoxShadow(color: Colors.black, offset: Offset(4, 4))],
+            ),
+            child: const Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('PACEFLOW PREMIUM', style: TextStyle(color: Colors.white, fontFamily: 'Unbounded', fontWeight: FontWeight.w900, fontSize: 12)),
+                SizedBox(height: 12),
+                Text('Unlock advanced AI metrics, live ghost pacing & audio recovery engine.', style: TextStyle(color: Colors.white, fontSize: 12, fontFamily: 'Geist')),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDesktopSidebarItem(BuildContext context, IconData icon, String label, String route, bool isSelected, {double iconSize = 18}) {
+    return GestureDetector(
+      onTap: () {
+        if (!isSelected) context.go(route);
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        decoration: BoxDecoration(
+          color: isSelected ? const Color(0xFFCCFF00) : Colors.transparent,
+          border: isSelected ? Border.all(color: Colors.black, width: 2) : Border.all(color: Colors.transparent, width: 2),
+          boxShadow: isSelected ? const [BoxShadow(color: Colors.black, offset: Offset(4, 4))] : [],
+        ),
+        child: Row(
+          children: [
+            Icon(icon, color: isSelected ? Colors.black : const Color(0xFF8E8E93), size: iconSize),
+            const SizedBox(width: 12),
+            Text(
+              label,
+              style: TextStyle(
+                color: isSelected ? Colors.black : const Color(0xFF8E8E93),
+                fontFamily: 'Unbounded',
+                fontWeight: FontWeight.w800,
+                fontSize: 12,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDesktopHeader(BuildContext context) {
+    return Row(
+      children: [
+        GestureDetector(
+          onTap: () => context.go('/dashboard'),
+          child: const Text(
+            '< DASHBOARD',
+            style: TextStyle(color: Color(0xFFFC4C02), fontFamily: 'Unbounded', fontWeight: FontWeight.w900, fontSize: 14),
+          ),
+        ),
+        const SizedBox(width: 24),
+        const Text(
+          'ACTIVITY HISTORY',
+          style: TextStyle(color: Colors.white, fontFamily: 'Unbounded', fontWeight: FontWeight.w900, fontSize: 24),
+        ),
+      ],
+    );
+  }
+
+  // --- CONTENT BUILDER ---
+
+  Widget _buildListOrGrid(BuildContext context, WidgetRef ref, AsyncValue<List<dynamic>> historyAsync, {required bool isMobile}) {
+    return historyAsync.when(
+      loading: () => const Center(child: CircularProgressIndicator(color: Color(0xFFCCFF00))),
+      error: (error, stack) => Center(
+        child: Text('Error loading activities: $error', style: const TextStyle(color: Colors.red, fontFamily: 'Geist')),
+      ),
+      data: (history) {
+        if (history.isEmpty) {
+          return const Center(
+            child: Text(
+              'NO ACTIVITIES YET. GO FOR A RUN!',
+              style: TextStyle(color: Color(0xFF8E8E93), fontFamily: 'Unbounded', fontWeight: FontWeight.w900, fontSize: 16),
+            ),
+          );
+        }
+
+        return RefreshIndicator(
+          onRefresh: () => ref.refresh(runHistoryProvider.future),
+          color: const Color(0xFFCCFF00),
+          backgroundColor: const Color(0xFF18181C),
+          child: isMobile 
+            ? ListView.separated(
+                padding: const EdgeInsets.all(20.0),
+                itemCount: history.length,
+                separatorBuilder: (context, index) => const SizedBox(height: 16),
+                itemBuilder: (context, index) => _buildHistoryCard(context, history[index]),
+              )
+            : GridView.builder(
+                gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+                  maxCrossAxisExtent: 500,
+                  childAspectRatio: 2.2,
+                  crossAxisSpacing: 24,
+                  mainAxisSpacing: 24,
+                ),
+                itemCount: history.length,
+                itemBuilder: (context, index) => _buildHistoryCard(context, history[index]),
+              ),
+        );
+      },
+    );
+  }
+
+  Widget _buildHistoryCard(BuildContext context, dynamic session) {
+    final distanceKm = (session.totalTime / session.avgPace) / 60;
+    final isBaseline = session.isBaseline == true;
+    
+    // Tag styles
+    final tagColor = isBaseline ? const Color(0xFF9B51E0) : const Color(0xFFCCFF00);
+    final tagText = isBaseline ? 'BASELINE TEST' : 'AI TRAINING RUN';
+    final tagTextColor = isBaseline ? Colors.white : Colors.black;
+
+    return GestureDetector(
+      onTap: () {
+        context.push('/analytics', extra: {
+          'geoJsonData': "{}", // Mock for now until detailed points are stored
+          'distance': distanceKm * 1000,
+          'isHistoryView': true,
+        });
+      },
+      child: NeoBrutalistContainer(
+        backgroundColor: Colors.white,
+        shadowColor: Colors.black,
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  DateFormat('MMM d, yyyy').format(session.date).toUpperCase(),
+                  style: const TextStyle(
+                    color: Colors.black,
+                    fontFamily: 'Unbounded',
+                    fontWeight: FontWeight.w900,
+                    fontSize: 14,
+                  ),
+                ),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: tagColor,
+                    border: Border.all(color: Colors.black, width: 1.5),
+                  ),
+                  child: Text(
+                    tagText,
+                    style: TextStyle(
+                      color: tagTextColor,
+                      fontFamily: 'Unbounded',
+                      fontWeight: FontWeight.w900,
+                      fontSize: 10,
+                      letterSpacing: 1.0,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 24),
+            Row(
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        '${distanceKm.toStringAsFixed(1)} KM',
+                        style: const TextStyle(color: Colors.black, fontFamily: 'Unbounded', fontWeight: FontWeight.w900, fontSize: 32),
+                      ),
+                      const SizedBox(height: 8),
+                      Row(
+                        children: [
+                          Text(
+                            _formatDuration(session.totalTime),
+                            style: const TextStyle(color: Color(0xFFFC4C02), fontFamily: 'Unbounded', fontWeight: FontWeight.w900, fontSize: 16),
+                          ),
+                          const SizedBox(width: 16),
+                          Text(
+                            _formatPace(session.avgPace * 60),
+                            style: const TextStyle(color: Colors.black54, fontFamily: 'Unbounded', fontWeight: FontWeight.w900, fontSize: 16),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF18181C),
+                    border: Border.all(color: Colors.black, width: 2),
+                  ),
+                  child: const Icon(Icons.arrow_forward_ios, color: Colors.white, size: 16),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

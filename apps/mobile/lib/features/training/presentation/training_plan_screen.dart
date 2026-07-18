@@ -8,6 +8,7 @@ import '../../../core/theme/app_theme.dart';
 import '../../../core/ui/neo_brutalist_container.dart';
 import '../../../core/ui/neo_brutalist_button.dart';
 import '../../../core/ui/responsive_layout.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class TrainingPlanScreen extends ConsumerStatefulWidget {
   final String goal;
@@ -62,90 +63,502 @@ class _TrainingPlanScreenState extends ConsumerState<TrainingPlanScreen> {
 
   Widget _buildMobileScaffold(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppTheme.backgroundColor,
-      appBar: AppBar(
-        title: Text('AI TRAINING PLAN', style: Theme.of(context).textTheme.headlineLarge?.copyWith(fontSize: 18)),
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () => context.go('/dashboard'),
-        ),
-      ),
+      backgroundColor: const Color(0xFF0E0E10),
       body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: _buildContent(),
+        child: Column(
+          children: [
+            _buildMobileHeader(context),
+            Expanded(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.all(20),
+                child: _buildContent(isDesktop: false),
+              ),
+            ),
+          ],
         ),
       ),
+      bottomNavigationBar: _buildBottomNav(),
       floatingActionButton: _buildFab(),
     );
   }
 
   Widget _buildDesktopScaffold(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppTheme.backgroundColor,
-      appBar: AppBar(
-        title: Text('AI TRAINING PLAN (DESKTOP)', style: Theme.of(context).textTheme.headlineLarge?.copyWith(fontSize: 18)),
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () => context.go('/dashboard'),
+      backgroundColor: const Color(0xFF0E0E10),
+      body: Row(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          _buildDesktopSidebar(),
+          Expanded(
+            child: Scaffold(
+              backgroundColor: Colors.transparent,
+              body: SafeArea(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.all(40.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      _buildDesktopHeader(context),
+                      const SizedBox(height: 32),
+                      _buildContent(isDesktop: true),
+                    ],
+                  ),
+                ),
+              ),
+              floatingActionButton: _buildFab(),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMobileHeader(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+      decoration: const BoxDecoration(
+        color: Color(0xFF18181C),
+        border: Border(bottom: BorderSide(color: Colors.black, width: 1)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              GestureDetector(
+                onTap: () => context.go('/dashboard'),
+                child: Container(
+                  padding: const EdgeInsets.all(6),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF26262B),
+                    border: Border.all(color: Colors.black, width: 2),
+                  ),
+                  child: const Icon(Icons.chevron_left, color: Colors.white, size: 16),
+                ),
+              ),
+              const Text(
+                'WEEK 3 OF 8',
+                style: TextStyle(
+                  color: Color(0xFFFC4C02),
+                  fontFamily: 'Unbounded',
+                  fontWeight: FontWeight.w900,
+                  fontSize: 12,
+                ),
+              ),
+              const SizedBox(width: 28),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Text(
+            widget.goal.toUpperCase(),
+            style: const TextStyle(
+              color: Colors.white,
+              fontFamily: 'Unbounded',
+              fontWeight: FontWeight.w900,
+              fontSize: 22,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDesktopHeader(BuildContext context) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'WEEK 3 OF 8',
+              style: TextStyle(
+                color: Color(0xFFFC4C02),
+                fontFamily: 'Unbounded',
+                fontWeight: FontWeight.w900,
+                fontSize: 12,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              widget.goal.toUpperCase(),
+              style: const TextStyle(
+                color: Colors.white,
+                fontFamily: 'Unbounded',
+                fontWeight: FontWeight.w900,
+                fontSize: 32,
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildDesktopSidebar() {
+    return Container(
+      width: 260,
+      padding: const EdgeInsets.all(24),
+      decoration: const BoxDecoration(
+        color: Color(0xFF18181C),
+        border: Border(right: BorderSide(color: Colors.black, width: 3)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFCCFF00),
+                  border: Border.all(color: Colors.black, width: 2),
+                ),
+                child: const Text('PF', style: TextStyle(color: Colors.black, fontFamily: 'Unbounded', fontWeight: FontWeight.w900, fontSize: 16)),
+              ),
+              const SizedBox(width: 8),
+              const Text('PACEFLOW', style: TextStyle(color: Colors.white, fontFamily: 'Unbounded', fontWeight: FontWeight.w900, fontSize: 20)),
+            ],
+          ),
+          const SizedBox(height: 48),
+          _buildSidebarItem(Icons.crop_square, 'DASHBOARD', '/dashboard', false),
+          const SizedBox(height: 16),
+          _buildSidebarItem(Icons.crop_square, 'PLAN', '/dashboard', true),
+          const SizedBox(height: 16),
+          _buildSidebarItem(Icons.circle, 'LIVE RUN', '/dashboard', false, iconSize: 10),
+          const SizedBox(height: 16),
+          _buildSidebarItem(Icons.circle, 'ANALYTICS', '/dashboard', false, iconSize: 10),
+          const Spacer(),
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: const Color(0xFFFC4C02),
+              border: Border.all(color: Colors.black, width: 3),
+              boxShadow: const [BoxShadow(color: Colors.black, offset: Offset(4, 4))],
+            ),
+            child: const Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('PACEFLOW PREMIUM', style: TextStyle(color: Colors.white, fontFamily: 'Unbounded', fontWeight: FontWeight.w900, fontSize: 12)),
+                SizedBox(height: 12),
+                Text('Unlock advanced AI metrics, live ghost pacing & audio recovery engine.', style: TextStyle(color: Colors.white, fontSize: 12, fontFamily: 'Geist')),
+              ],
+            ),
+          ),
+          const SizedBox(height: 24),
+          Row(
+            children: [
+              Container(
+                width: 40,
+                height: 40,
+                color: Colors.grey[800],
+                child: const Icon(Icons.person, color: Colors.white),
+              ),
+              const SizedBox(width: 12),
+              const Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('ALEX RUNS', style: TextStyle(color: Colors.white, fontFamily: 'Unbounded', fontWeight: FontWeight.w800, fontSize: 12)),
+                  SizedBox(height: 2),
+                  Text('Premium Member', style: TextStyle(color: Color(0xFF8E8E93), fontSize: 11, fontFamily: 'Geist')),
+                ],
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSidebarItem(IconData icon, String label, String route, bool isSelected, {double iconSize = 18}) {
+    return GestureDetector(
+      onTap: () {
+        if (!isSelected) context.go(route);
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        decoration: BoxDecoration(
+          color: isSelected ? const Color(0xFFCCFF00) : Colors.transparent,
+          border: isSelected ? Border.all(color: Colors.black, width: 2) : Border.all(color: Colors.transparent, width: 2),
+          boxShadow: isSelected ? const [BoxShadow(color: Colors.black, offset: Offset(4, 4))] : [],
+        ),
+        child: Row(
+          children: [
+            Icon(icon, color: isSelected ? Colors.black : const Color(0xFF8E8E93), size: iconSize),
+            const SizedBox(width: 12),
+            Text(
+              label,
+              style: TextStyle(
+                color: isSelected ? Colors.black : const Color(0xFF8E8E93),
+                fontFamily: 'Unbounded',
+                fontWeight: FontWeight.w800,
+                fontSize: 12,
+              ),
+            ),
+          ],
         ),
       ),
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 64.0, vertical: 32.0),
-          child: _buildDesktopContent(),
-        ),
+    );
+  }
+
+  Widget _buildBottomNav() {
+    return Container(
+      height: 72,
+      padding: const EdgeInsets.symmetric(horizontal: 20),
+      decoration: const BoxDecoration(
+        color: Color(0xFF18181C),
+        border: Border(top: BorderSide(color: Colors.black, width: 3)),
       ),
-      floatingActionButton: _buildFab(),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceAround,
+        children: [
+          _buildBottomNavItem(Icons.home_filled, 'Home', false, '/dashboard'),
+          _buildBottomNavItem(Icons.calendar_today, 'Plan', true, '/dashboard'),
+          _buildBottomNavItem(Icons.history, 'Activity', false, '/dashboard'),
+          _buildBottomNavItem(Icons.person, 'Profile', false, '/dashboard'),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildBottomNavItem(IconData icon, String label, bool isSelected, String route) {
+    return GestureDetector(
+      onTap: () {
+        if (!isSelected) context.go(route);
+      },
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(icon, color: isSelected ? Colors.white : const Color(0xFF8E8E93), size: 24),
+          const SizedBox(height: 4),
+          Text(
+            label,
+            style: TextStyle(
+              color: isSelected ? Colors.white : const Color(0xFF8E8E93),
+              fontFamily: 'Geist',
+              fontWeight: FontWeight.bold,
+              fontSize: 11,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildContent({required bool isDesktop}) {
+    if (_isLoading) return _buildLoadingState();
+    if (_errorMessage.isNotEmpty) return Center(child: Text(_errorMessage, style: const TextStyle(color: Colors.red)));
+    if (_requiresBaseline) return _buildBaselineState();
+    if (_workouts == null || _workouts!.isEmpty) return const Center(child: Text('No plan available.', style: TextStyle(color: Colors.grey)));
+
+    if (isDesktop) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text('WEEKLY WORKOUT SCHEDULE', style: TextStyle(color: Colors.white, fontFamily: 'Unbounded', fontWeight: FontWeight.w900, fontSize: 16)),
+            ],
+          ),
+          const SizedBox(height: 16),
+          if (_workouts!.length >= 3)
+            Row(
+              children: [
+                Expanded(child: _buildDayCard(_workouts![0], isDesktop)),
+                const SizedBox(width: 16),
+                Expanded(child: _buildDayCard(_workouts![1], isDesktop)),
+                const SizedBox(width: 16),
+                Expanded(child: _buildDayCard(_workouts![2], isDesktop)),
+              ],
+            ),
+          const SizedBox(height: 16),
+          if (_workouts!.length >= 7)
+            Row(
+              children: [
+                Expanded(child: _buildDayCard(_workouts![3], isDesktop)),
+                const SizedBox(width: 16),
+                Expanded(child: _buildDayCard(_workouts![4], isDesktop)),
+                const SizedBox(width: 16),
+                Expanded(child: _buildDayCard(_workouts![5], isDesktop)),
+                const SizedBox(width: 16),
+                Expanded(child: _buildDayCard(_workouts![6], isDesktop)),
+              ],
+            ),
+        ],
+      );
+    } else {
+      return Column(
+        children: _workouts!.map((w) => Padding(
+          padding: const EdgeInsets.only(bottom: 16),
+          child: _buildDayCard(w, isDesktop),
+        )).toList(),
+      );
+    }
+  }
+
+  Widget _buildLoadingState() {
+    return Center(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: const [
+          CircularProgressIndicator(color: Color(0xFFCCFF00)),
+          SizedBox(height: 16),
+          Text('Loading Plan...', style: TextStyle(color: Colors.white, fontFamily: 'Unbounded')),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildBaselineState() {
+    return Center(
+      child: Text('Baseline test required.', style: TextStyle(color: Colors.white)),
+    );
+  }
+
+  Widget _buildDayCard(TrainingWorkout workout, bool isDesktop) {
+    Color tagColor;
+    Color bgColor = const Color(0xFF111113);
+    Color tagTextColor = Colors.white;
+    bool isToday = workout.day.toLowerCase() == 'wed'; // Dummy logic for today
+    bool isCompleted = workout.day.toLowerCase() == 'mon' || workout.day.toLowerCase() == 'tue';
+    
+    switch (workout.type.toLowerCase()) {
+      case 'easy':
+      case 'easy run':
+        tagColor = Colors.transparent;
+        tagTextColor = const Color(0xFF8E8E93);
+        break;
+      case 'interval':
+      case 'speed work':
+        tagColor = const Color(0xFFCCFF00);
+        tagTextColor = Colors.black;
+        if (isToday) bgColor = const Color(0xFF26262B);
+        break;
+      case 'long':
+      case 'long run':
+        tagColor = const Color(0xFF9B51E0);
+        break;
+      case 'tempo':
+        tagColor = const Color(0xFF2D9CDB);
+        break;
+      case 'rest':
+        tagColor = Colors.transparent;
+        tagTextColor = const Color(0xFF8E8E93);
+        break;
+      default:
+        tagColor = Colors.transparent;
+        tagTextColor = const Color(0xFF8E8E93);
+    }
+
+    return Container(
+      padding: EdgeInsets.all(isDesktop ? 16 : 14),
+      decoration: BoxDecoration(
+        color: bgColor,
+        border: Border.all(color: Colors.black, width: 3),
+        boxShadow: [BoxShadow(color: isToday ? const Color(0xFFFC4C02) : Colors.black, offset: const Offset(4, 4))],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Row(
+                children: [
+                  Text(workout.day.toUpperCase(), style: TextStyle(color: isToday ? const Color(0xFFFC4C02) : Colors.white, fontFamily: 'Unbounded', fontWeight: FontWeight.w900, fontSize: 15)),
+                  const SizedBox(width: 10),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: tagColor,
+                      border: Border.all(color: tagColor == Colors.transparent ? Colors.black : Colors.black, width: 1.5),
+                    ),
+                    child: Text(
+                      workout.type.toUpperCase(),
+                      style: TextStyle(color: tagTextColor, fontFamily: 'Unbounded', fontWeight: FontWeight.w900, fontSize: 9),
+                    ),
+                  ),
+                ],
+              ),
+              if (isCompleted)
+                Row(
+                  children: const [
+                    Icon(Icons.check_circle, color: Color(0xFFCCFF00), size: 16),
+                    SizedBox(width: 4),
+                    Text('DONE', style: TextStyle(color: Color(0xFFCCFF00), fontFamily: 'Geist', fontWeight: FontWeight.bold, fontSize: 11)),
+                  ],
+                ),
+              if (isToday && !isDesktop)
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFCCFF00),
+                    border: Border.all(color: Colors.black, width: 1.5),
+                  ),
+                  child: const Text('TODAY', style: TextStyle(color: Colors.black, fontFamily: 'Unbounded', fontWeight: FontWeight.w900, fontSize: 9)),
+                ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          if (workout.type.toLowerCase() != 'rest') ...[
+            Row(
+              children: [
+                const Icon(Icons.access_time, color: Colors.white, size: 14),
+                const SizedBox(width: 4),
+                const Text('45 min', style: TextStyle(color: Colors.white, fontFamily: 'Geist', fontSize: 13)), // Dummy metric
+                const SizedBox(width: 16),
+                const Icon(Icons.speed, color: Colors.white, size: 14),
+                const SizedBox(width: 4),
+                const Text('Pace: 5:30/km', style: TextStyle(color: Colors.white, fontFamily: 'Geist', fontSize: 13)), // Dummy metric
+              ],
+            ),
+            const SizedBox(height: 10),
+          ],
+          Text(
+            workout.description,
+            style: const TextStyle(color: Color(0xFF8E8E93), fontFamily: 'Geist', fontSize: 13, height: 1.4),
+          ),
+          if (isToday) ...[
+            const SizedBox(height: 12),
+            GestureDetector(
+              onTap: () {
+                context.push('/run', extra: {
+                  'targetDistance': 'Custom',
+                  'targetPaceSeconds': 300.0,
+                  'isGhostRacing': false,
+                  'strictness': 'Standard',
+                  'isBaseline': false,
+                });
+              },
+              child: Container(
+                height: isDesktop ? 36 : 42,
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  color: const Color(0xFFCCFF00),
+                  border: Border.all(color: Colors.black, width: 2),
+                  boxShadow: const [BoxShadow(color: Colors.black, offset: Offset(4, 4))],
+                ),
+                child: Text('START WORKOUT', style: TextStyle(color: Colors.black, fontFamily: 'Unbounded', fontWeight: FontWeight.w900, fontSize: isDesktop ? 11 : 12)),
+              ),
+            ),
+          ],
+        ],
+      ),
     );
   }
 
   Widget? _buildFab() {
-    if (_workouts != null && _workouts!.isNotEmpty) {
-      return Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.end,
-        children: [
-          if (widget.planId != null) ...[
-            NeoBrutalistButton(
-              onPressed: _setActivePlan,
-              backgroundColor: AppTheme.primaryColor,
-              shadowColor: Colors.black,
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: const [
-                    Icon(Icons.check_circle_outline, color: Colors.black, size: 20),
-                    SizedBox(width: 8),
-                    Text('SET AS ACTIVE', style: TextStyle(color: Colors.black, fontWeight: FontWeight.w900)),
-                  ],
-                ),
-              ),
-            ),
-            const SizedBox(height: 16),
-          ],
-          NeoBrutalistButton(
-            onPressed: () => context.push('/training/chat'),
-            backgroundColor: AppTheme.accentColor,
-            shadowColor: Colors.black,
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: const [
-                  Icon(Icons.chat_bubble_outline, color: Colors.black, size: 20),
-                  SizedBox(width: 8),
-                  Text('ADJUST PLAN', style: TextStyle(color: Colors.black, fontWeight: FontWeight.w900)),
-                ],
-              ),
-            ),
-          ),
-        ],
+    if (widget.planId != null) {
+      return Padding(
+        padding: const EdgeInsets.only(bottom: 16.0),
+        child: FloatingActionButton.extended(
+          onPressed: _setActivePlan,
+          backgroundColor: const Color(0xFFCCFF00),
+          icon: const Icon(Icons.check_circle_outline, color: Colors.black),
+          label: const Text('SET AS ACTIVE', style: TextStyle(color: Colors.black, fontWeight: FontWeight.w900, fontFamily: 'Unbounded')),
+        ),
       );
     }
     return null;
@@ -175,335 +588,5 @@ class _TrainingPlanScreenState extends ConsumerState<TrainingPlanScreen> {
         );
       }
     }
-  }
-
-  Widget _buildDesktopContent() {
-    if (_isLoading) return _buildLoadingState();
-    if (_errorMessage.isNotEmpty) return Center(child: Text(_errorMessage, style: const TextStyle(color: Colors.red)));
-    if (_requiresBaseline) return _buildBaselineState();
-    if (_workouts == null || _workouts!.isEmpty) return const Center(child: Text('No plan available.', style: TextStyle(color: Colors.grey)));
-
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        if (_adjustmentNotice != null && _adjustmentNotice!.isNotEmpty) ...[
-          Expanded(
-            flex: 1,
-            child: NeoBrutalistContainer(
-              backgroundColor: AppTheme.primaryColor,
-              shadowColor: Colors.black,
-              borderWidth: 2,
-              padding: const EdgeInsets.all(24),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Row(
-                    children: [
-                      const Icon(Icons.psychology, color: Colors.black, size: 28),
-                      const SizedBox(width: 12),
-                      const Text('AI COACH NOTE', style: TextStyle(color: Colors.black, fontWeight: FontWeight.w900, fontSize: 16, fontFamily: 'Unbounded')),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    _adjustmentNotice!,
-                    style: const TextStyle(color: Colors.black87, fontSize: 14, height: 1.5, fontFamily: 'Geist', fontWeight: FontWeight.w600),
-                  ),
-                ],
-              ),
-            ),
-          ),
-          const SizedBox(width: 32),
-        ],
-        Expanded(
-          flex: _adjustmentNotice != null && _adjustmentNotice!.isNotEmpty ? 2 : 1,
-          child: SingleChildScrollView(
-            child: Wrap(
-              spacing: 16,
-              runSpacing: 16,
-              children: _workouts!.map((workout) => SizedBox(
-                width: 300,
-                child: _buildWorkoutCard(workout),
-              )).toList(),
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildLoadingState() {
-    return Center(
-      child: NeoBrutalistContainer(
-        backgroundColor: AppTheme.surfaceColor,
-        shadowColor: AppTheme.accentColor,
-        borderWidth: 3,
-        shadowOffset: 6,
-        padding: const EdgeInsets.all(32),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Stack(
-              alignment: Alignment.center,
-              children: [
-                const SizedBox(
-                  width: 80,
-                  height: 80,
-                  child: CircularProgressIndicator(
-                    color: AppTheme.primaryColor,
-                    strokeWidth: 4,
-                  ),
-                ),
-                Icon(
-                  Icons.auto_awesome,
-                  color: AppTheme.primaryColor,
-                  size: 32,
-                ),
-              ],
-            ),
-            const SizedBox(height: 32),
-            Text(
-              'CRAFTING PLAN',
-              style: Theme.of(context).textTheme.headlineLarge?.copyWith(fontSize: 18),
-            ),
-            const SizedBox(height: 12),
-            const Text(
-              'Analyzing history...\nCalibrating targets...',
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                color: AppTheme.secondaryTextColor,
-                fontFamily: 'Geist',
-                fontSize: 14,
-                height: 1.5,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildContent() {
-    if (_isLoading) return _buildLoadingState();
-
-    if (_errorMessage.isNotEmpty) {
-      return Center(
-        child: Text(_errorMessage, style: const TextStyle(color: Colors.red)),
-      );
-    }
-
-    if (_requiresBaseline) {
-      return _buildBaselineState();
-    }
-
-    if (_workouts == null || _workouts!.isEmpty) {
-      return const Center(child: Text('No plan available.', style: TextStyle(color: Colors.grey)));
-    }
-
-    return Column(
-      children: [
-        if (_adjustmentNotice != null && _adjustmentNotice!.isNotEmpty)
-          Padding(
-            padding: const EdgeInsets.only(bottom: 16),
-            child: NeoBrutalistContainer(
-              backgroundColor: AppTheme.primaryColor,
-              shadowColor: Colors.black,
-              borderWidth: 2,
-              padding: const EdgeInsets.all(16),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Icon(Icons.psychology, color: Colors.black, size: 24),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text('AI COACH NOTE', style: TextStyle(color: Colors.black, fontWeight: FontWeight.w900, fontSize: 14, fontFamily: 'Unbounded')),
-                        const SizedBox(height: 4),
-                        Text(
-                          _adjustmentNotice!,
-                          style: const TextStyle(color: Colors.black87, fontSize: 13, height: 1.4, fontFamily: 'Geist', fontWeight: FontWeight.w600),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        Expanded(
-          child: ListView.builder(
-            itemCount: _workouts!.length,
-            itemBuilder: (context, index) {
-              final workout = _workouts![index];
-              return _buildWorkoutCard(workout);
-            },
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildBaselineState() {
-    return Center(
-      child: NeoBrutalistContainer(
-        backgroundColor: AppTheme.surfaceColor,
-        shadowColor: AppTheme.accentColor,
-        borderWidth: 3,
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            const Icon(Icons.directions_run, color: AppTheme.accentColor, size: 64),
-            const SizedBox(height: 16),
-            Text(
-              'BASELINE TEST REQUIRED',
-              style: Theme.of(context).textTheme.headlineLarge?.copyWith(fontSize: 18),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 12),
-            Text(
-              'We need to understand your current fitness level before generating a plan for ${widget.goal}.',
-              style: const TextStyle(color: AppTheme.secondaryTextColor, fontSize: 14, fontFamily: 'Geist'),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 16),
-            NeoBrutalistContainer(
-              backgroundColor: AppTheme.backgroundColor,
-              shadowColor: Colors.transparent,
-              borderWidth: 2,
-              padding: const EdgeInsets.all(12),
-              child: Text(
-                _baselineInstruction,
-                style: const TextStyle(color: Colors.white, fontStyle: FontStyle.italic, fontFamily: 'Geist'),
-                textAlign: TextAlign.center,
-              ),
-            ),
-            const SizedBox(height: 24),
-            NeoBrutalistButton(
-              onPressed: () {
-                context.push('/run', extra: {
-                  'targetDistance': 'Open',
-                  'targetPaceSeconds': 420.0,
-                  'isGhostRacing': false,
-                  'strictness': 'Standard',
-                  'isBaseline': true,
-                  'pendingPlanGoal': widget.goal
-                });
-              },
-              backgroundColor: AppTheme.accentColor,
-              child: const Text('START BASELINE RUN'),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildWorkoutCard(TrainingWorkout workout) {
-    Color typeColor;
-    IconData typeIcon;
-    switch (workout.type.toLowerCase()) {
-      case 'easy':
-        typeColor = Colors.blueAccent;
-        typeIcon = Icons.spa;
-        break;
-      case 'interval':
-        typeColor = Colors.redAccent;
-        typeIcon = Icons.speed;
-        break;
-      case 'long':
-        typeColor = Colors.purpleAccent;
-        typeIcon = Icons.map;
-        break;
-      case 'rest':
-        typeColor = Colors.grey;
-        typeIcon = Icons.bedtime;
-        break;
-      default:
-        typeColor = Colors.white54;
-        typeIcon = Icons.fitness_center;
-    }
-
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
-      child: NeoBrutalistContainer(
-        backgroundColor: AppTheme.surfaceColor,
-        shadowColor: typeColor,
-        borderWidth: 2,
-        shadowOffset: 3,
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Text(
-                  workout.day.toUpperCase(),
-                  style: Theme.of(context).textTheme.headlineLarge?.copyWith(fontSize: 16),
-                ),
-                const Spacer(),
-                NeoBrutalistContainer(
-                  backgroundColor: typeColor,
-                  shadowColor: Colors.black,
-                  shadowOffset: 2,
-                  borderWidth: 1.5,
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  child: Row(
-                    children: [
-                      Icon(typeIcon, color: Colors.black, size: 12),
-                      const SizedBox(width: 4),
-                      Text(
-                        workout.type.toUpperCase(),
-                        style: const TextStyle(color: Colors.black, fontSize: 11, fontWeight: FontWeight.w900, fontFamily: 'Unbounded'),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 8),
-            Text(
-              workout.description,
-              style: const TextStyle(color: AppTheme.secondaryTextColor, fontSize: 14, fontFamily: 'Geist'),
-            ),
-            if (workout.type.toLowerCase() != 'rest') ...[
-              const SizedBox(height: 16),
-              SizedBox(
-                width: double.infinity,
-                child: NeoBrutalistButton(
-                  onPressed: () {
-                    context.push('/run', extra: {
-                      'targetDistance': 'Custom',
-                      'targetPaceSeconds': 300.0,
-                      'isGhostRacing': false,
-                      'strictness': 'Standard',
-                      'isBaseline': false,
-                    });
-                  },
-                  backgroundColor: AppTheme.primaryColor,
-                  child: const Padding(
-                    padding: EdgeInsets.symmetric(vertical: 12),
-                    child: Text(
-                      'START WORKOUT',
-                      style: TextStyle(
-                        fontFamily: 'Unbounded',
-                        fontWeight: FontWeight.w900,
-                        fontSize: 14,
-                        color: Colors.black,
-                        letterSpacing: 1.2,
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ],
-        ),
-      ),
-    );
   }
 }

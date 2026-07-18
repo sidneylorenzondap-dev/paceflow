@@ -8,6 +8,7 @@ import '../../features/training/presentation/training_adjust_chat_screen.dart';
 import '../../features/training/presentation/training_plan_screen.dart';
 import '../../features/auth/presentation/login_screen.dart';
 import '../../features/auth/data/auth_service.dart';
+import '../../features/run/presentation/device_scanner_screen.dart';
 
 final appRouterProvider = Provider<GoRouter>((ref) {
   final authState = ref.watch(authStateProvider);
@@ -97,6 +98,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/training/chat',
         builder: (context, state) => const TrainingAdjustChatScreen(),
+      ),
+      GoRoute(
+        path: '/scanner',
+        builder: (context, state) => const DeviceScannerScreen(),
       ),
     ],
   );

@@ -94,7 +94,7 @@ class _PostRunAnalyticsScreenState extends ConsumerState<PostRunAnalyticsScreen>
                         backgroundColor: AppTheme.primaryColor,
                         child: const Padding(
                           padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                          child: Text('GENERATE PLAN'),
+                          child: Text('GENERATE PLAN', style: TextStyle(fontFamily: 'Unbounded', fontWeight: FontWeight.w900)),
                         ),
                       ),
                   ],
@@ -107,7 +107,6 @@ class _PostRunAnalyticsScreenState extends ConsumerState<PostRunAnalyticsScreen>
       return;
     }
 
-    // Basic mock check: If they ran further than 5000m, they likely broke a baseline record!
     if (!widget.isHistoryView && widget.distanceMeters >= 5000 && !_showedCelebration) {
       _showedCelebration = true;
       showDialog(
@@ -152,7 +151,7 @@ class _PostRunAnalyticsScreenState extends ConsumerState<PostRunAnalyticsScreen>
                         backgroundColor: AppTheme.primaryColor,
                         child: const Padding(
                           padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                          child: Text('LEVEL UP!'),
+                          child: Text('LEVEL UP!', style: TextStyle(fontFamily: 'Unbounded', fontWeight: FontWeight.w900)),
                         ),
                       ),
                   ],
@@ -195,25 +194,20 @@ class _PostRunAnalyticsScreenState extends ConsumerState<PostRunAnalyticsScreen>
 
   _onMapCreated(MapboxMap mapboxMap) {
     this.mapboxMap = mapboxMap;
-    // Hide default UI for cleaner look
     mapboxMap.scaleBar.updateSettings(ScaleBarSettings(enabled: false));
     mapboxMap.compass.updateSettings(CompassSettings(enabled: false));
-    
     _loadFatigueHeatmap();
   }
 
   Future<void> _loadFatigueHeatmap() async {
     if (mapboxMap == null) return;
-    
     try {
       await mapboxMap!.style.addSource(GeoJsonSource(id: "fatigue-source", data: widget.geoJsonData));
-      
-      // Add a circle layer to visualize the fatigue points
       await mapboxMap!.style.addLayer(
         CircleLayer(
           id: "fatigue-layer",
           sourceId: "fatigue-source",
-          circleColor: Colors.red.value, // Simplification to fix compiler error
+          circleColor: Colors.red.value,
           circleRadius: 5.0,
         ),
       );
@@ -224,160 +218,537 @@ class _PostRunAnalyticsScreenState extends ConsumerState<PostRunAnalyticsScreen>
 
   @override
   Widget build(BuildContext context) {
-    // Note: To use Mapbox, a public token must be set via MapboxOptions in main.dart or Info.plist / AndroidManifest
-    // For this prototype, we assume the token is configured at the platform level.
     return Scaffold(
-      backgroundColor: AppTheme.backgroundColor,
-      appBar: AppBar(
-        title: Text('POST-RUN ANALYTICS', style: Theme.of(context).textTheme.headlineLarge?.copyWith(fontSize: 18)),
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () => context.go('/dashboard'),
+      backgroundColor: const Color(0xFF0E0E10),
+      body: SafeArea(
+        child: ResponsiveLayout(
+          mobile: _buildMobileContent(),
+          desktop: _buildDesktopContent(),
         ),
-      ),
-      body: ResponsiveLayout(
-        mobile: _buildMobileContent(),
-        desktop: _buildDesktopContent(),
       ),
     );
   }
+
+  // --- MOBILE LAYOUT ---
 
   Widget _buildMobileContent() {
     return Column(
       children: [
-        Expanded(flex: 2, child: _buildMapArea()),
-        Expanded(flex: 1, child: _buildAnalyticsArea()),
+        _buildMobileHeader(),
+        Expanded(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+            child: Column(
+              children: [
+                // Top Stats
+                _buildTopStats(),
+                const SizedBox(height: 32),
+                
+                // Map Area
+                _buildMapSection(),
+                const SizedBox(height: 24),
+
+                // Metrics Grid
+                _buildMetricsGrid(),
+                const SizedBox(height: 32),
+
+                // AI Breakdown
+                _buildAIBreakdown(),
+                const SizedBox(height: 24),
+
+                // AI Nutrition
+                _buildAINutrition(),
+                const SizedBox(height: 32),
+              ],
+            ),
+          ),
+        ),
       ],
     );
   }
+
+  Widget _buildMobileHeader() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+      decoration: const BoxDecoration(
+        color: Color(0xFF18181C),
+        border: Border(bottom: BorderSide(color: Colors.black, width: 1)),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          GestureDetector(
+            onTap: () => context.go('/dashboard'),
+            child: Row(
+              children: [
+                const Icon(Icons.chevron_left, color: Color(0xFFFC4C02), size: 24),
+                const SizedBox(width: 4),
+                const Text(
+                  'DASHBOARD',
+                  style: TextStyle(color: Color(0xFFFC4C02), fontFamily: 'Unbounded', fontWeight: FontWeight.w900, fontSize: 12),
+                ),
+              ],
+            ),
+          ),
+          const Text(
+            'POST-RUN ANALYTICS',
+            style: TextStyle(
+              color: Colors.white,
+              fontFamily: 'Unbounded',
+              fontWeight: FontWeight.w900,
+              fontSize: 14,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTopStats() {
+    // Dummy conversion if 0 for prototype
+    final km = widget.distanceMeters > 0 ? (widget.distanceMeters / 1000).toStringAsFixed(1) : '5.0';
+    return Column(
+      children: [
+        Text(
+          km,
+          style: const TextStyle(color: Colors.white, fontFamily: 'Unbounded', fontWeight: FontWeight.w900, fontSize: 80, height: 1.1),
+        ),
+        const Text(
+          'KILOMETERS',
+          style: TextStyle(color: Color(0xFFFC4C02), fontFamily: 'Unbounded', fontWeight: FontWeight.w900, fontSize: 14, letterSpacing: 1),
+        ),
+        const SizedBox(height: 24),
+        const Text(
+          '32:41', // Placeholder time
+          style: TextStyle(color: Colors.white, fontFamily: 'Unbounded', fontWeight: FontWeight.w900, fontSize: 56, height: 1.1),
+        ),
+        const Text(
+          'ELAPSED TIME',
+          style: TextStyle(color: Color(0xFFCCFF00), fontFamily: 'Unbounded', fontWeight: FontWeight.w900, fontSize: 14, letterSpacing: 1),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildMapSection() {
+    return Container(
+      width: double.infinity,
+      decoration: BoxDecoration(
+        color: const Color(0xFF18181C),
+        border: Border.all(color: Colors.black, width: 3),
+        boxShadow: const [BoxShadow(color: Colors.black, offset: Offset(4, 4))],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text('ROUTE & EFFORT HEATMAP', style: TextStyle(color: Colors.white, fontFamily: 'Unbounded', fontWeight: FontWeight.w900, fontSize: 14)),
+                const Icon(Icons.map_outlined, color: Colors.white, size: 20),
+              ],
+            ),
+          ),
+          Container(
+            height: 250,
+            decoration: const BoxDecoration(
+              border: Border(top: BorderSide(color: Colors.black, width: 3)),
+            ),
+            child: widget.geoJsonData.isNotEmpty 
+              ? MapWidget(
+                  key: const ValueKey("mapWidget"),
+                  onMapCreated: _onMapCreated,
+                )
+              : Container(
+                  color: const Color(0xFF111113),
+                  alignment: Alignment.center,
+                  child: const Text('NO GPS DATA', style: TextStyle(color: Color(0xFF8E8E93), fontFamily: 'Unbounded', fontWeight: FontWeight.w900)),
+                ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMetricsGrid() {
+    return Column(
+      children: [
+        Row(
+          children: [
+            Expanded(child: _buildMetricBox('AVG PACE', '5:35/KM', const Color(0xFFCCFF00))),
+            const SizedBox(width: 16),
+            Expanded(child: _buildMetricBox('MAX HR', '172 BPM', const Color(0xFF9B51E0))),
+          ],
+        ),
+        const SizedBox(height: 16),
+        Row(
+          children: [
+            Expanded(child: _buildMetricBox('AVG CADENCE', '165 SPM', const Color(0xFFFC4C02))),
+            const SizedBox(width: 16),
+            Expanded(child: _buildMetricBox('ELEVATION', '45M', const Color(0xFF2D9CDB))),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildMetricBox(String label, String value, Color tagColor) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: const Color(0xFF18181C),
+        border: Border.all(color: Colors.black, width: 3),
+        boxShadow: const [BoxShadow(color: Colors.black, offset: Offset(4, 4))],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            decoration: BoxDecoration(
+              color: tagColor,
+              border: Border.all(color: Colors.black, width: 1.5),
+            ),
+            child: Text(label, style: TextStyle(color: tagColor == const Color(0xFFCCFF00) ? Colors.black : Colors.white, fontFamily: 'Unbounded', fontWeight: FontWeight.w900, fontSize: 10)),
+          ),
+          const SizedBox(height: 12),
+          Text(value, style: const TextStyle(color: Colors.white, fontFamily: 'Unbounded', fontWeight: FontWeight.w900, fontSize: 16)),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildAIBreakdown() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        border: Border.all(color: Colors.black, width: 3),
+        boxShadow: const [BoxShadow(color: Colors.black, offset: Offset(4, 4))],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: const [
+              Icon(Icons.psychology, color: Colors.black, size: 24),
+              SizedBox(width: 8),
+              Text('AI RUN BREAKDOWN', style: TextStyle(color: Colors.black, fontFamily: 'Unbounded', fontWeight: FontWeight.w900, fontSize: 14)),
+            ],
+          ),
+          const SizedBox(height: 16),
+          const Text(
+            'Your form was highly efficient for the first 3km, but cadence dropped by 8% in the final kilometer. Focus on maintaining quick turnover when fatigued.',
+            style: TextStyle(color: Colors.black, fontFamily: 'Geist', fontWeight: FontWeight.bold, fontSize: 14, height: 1.5),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildAINutrition() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: const Color(0xFF18181C),
+        border: Border.all(color: Colors.black, width: 3),
+        boxShadow: const [BoxShadow(color: Colors.black, offset: Offset(4, 4))],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: const [
+              Icon(Icons.restaurant, color: Colors.white, size: 24),
+              SizedBox(width: 8),
+              Text('AI RECOVERY NUTRITION', style: TextStyle(color: Colors.white, fontFamily: 'Unbounded', fontWeight: FontWeight.w900, fontSize: 14)),
+            ],
+          ),
+          const SizedBox(height: 20),
+          Row(
+            children: [
+              Expanded(child: _buildDietToggle('Standard')),
+              const SizedBox(width: 8),
+              Expanded(child: _buildDietToggle('Vegan')),
+              const SizedBox(width: 8),
+              Expanded(child: _buildDietToggle('Keto')),
+            ],
+          ),
+          const SizedBox(height: 20),
+          FutureBuilder<String>(
+            future: _nutritionPlanFuture,
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return const Center(child: Padding(
+                  padding: EdgeInsets.all(20.0),
+                  child: CircularProgressIndicator(color: Color(0xFFCCFF00)),
+                ));
+              }
+              if (snapshot.hasError || !snapshot.hasData) {
+                return const Text('Failed to load nutrition plan.', style: TextStyle(color: Colors.red));
+              }
+              return Text(
+                snapshot.data!,
+                style: const TextStyle(color: Colors.white, fontFamily: 'Geist', fontSize: 14, height: 1.5),
+              );
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDietToggle(String diet) {
+    bool isSelected = selectedDiet == diet;
+    return GestureDetector(
+      onTap: () {
+        setState(() {
+          selectedDiet = diet;
+          _nutritionPlanFuture = _fetchNutritionPlan(diet);
+        });
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 10),
+        alignment: Alignment.center,
+        decoration: BoxDecoration(
+          color: isSelected ? const Color(0xFFCCFF00) : Colors.transparent,
+          border: Border.all(color: isSelected ? Colors.black : const Color(0xFF8E8E93), width: 2),
+        ),
+        child: Text(
+          diet.toUpperCase(),
+          style: TextStyle(
+            color: isSelected ? Colors.black : const Color(0xFF8E8E93),
+            fontFamily: 'Unbounded',
+            fontWeight: FontWeight.w900,
+            fontSize: 10,
+          ),
+        ),
+      ),
+    );
+  }
+
+  // --- DESKTOP LAYOUT ---
 
   Widget _buildDesktopContent() {
     return Row(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Expanded(flex: 2, child: _buildMapArea()),
-        Expanded(flex: 1, child: _buildAnalyticsArea()),
+        _buildDesktopSidebar(),
+        Expanded(
+          child: Padding(
+            padding: const EdgeInsets.all(40.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                _buildDesktopHeader(),
+                const SizedBox(height: 48),
+                Expanded(
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Left Column: Stats & Map
+                      Expanded(
+                        flex: 5,
+                        child: SingleChildScrollView(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                widget.distanceMeters > 0 ? (widget.distanceMeters / 1000).toStringAsFixed(1) : '5.0',
+                                style: const TextStyle(color: Colors.white, fontFamily: 'Unbounded', fontWeight: FontWeight.w900, fontSize: 120, height: 1.0),
+                              ),
+                              const Text(
+                                'KILOMETERS',
+                                style: TextStyle(color: Color(0xFFFC4C02), fontFamily: 'Unbounded', fontWeight: FontWeight.w900, fontSize: 20, letterSpacing: 1),
+                              ),
+                              const SizedBox(height: 40),
+                              
+                              const Text(
+                                '32:41',
+                                style: TextStyle(color: Colors.white, fontFamily: 'Unbounded', fontWeight: FontWeight.w900, fontSize: 80, height: 1.0),
+                              ),
+                              const Text(
+                                'ELAPSED TIME',
+                                style: TextStyle(color: Color(0xFFCCFF00), fontFamily: 'Unbounded', fontWeight: FontWeight.w900, fontSize: 16, letterSpacing: 1),
+                              ),
+                              const SizedBox(height: 48),
+
+                              _buildMetricsGrid(),
+                              const SizedBox(height: 48),
+
+                              _buildMapSection(),
+                            ],
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 64),
+                      // Right Column: Summary & AI
+                      Expanded(
+                        flex: 4,
+                        child: SingleChildScrollView(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              _buildDesktopGhostPacerCard(),
+                              const SizedBox(height: 32),
+                              _buildAIBreakdown(),
+                              const SizedBox(height: 32),
+                              _buildAINutrition(),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
       ],
     );
   }
 
-  Widget _buildMapArea() {
-    return kIsWeb
-        ? Container(
-            color: AppTheme.backgroundColor,
-            child: Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(Icons.map, size: 64, color: Colors.grey[800]),
-                  const SizedBox(height: 16),
-                  const Text(
-                    "MAPBOX HEATMAP\n(Available on iOS/Android device)",
-                    textAlign: TextAlign.center,
-                    style: TextStyle(color: AppTheme.secondaryTextColor, fontSize: 14, fontFamily: 'Unbounded', fontWeight: FontWeight.bold),
-                  ),
-                ],
+  Widget _buildDesktopSidebar() {
+    return Container(
+      width: 260,
+      padding: const EdgeInsets.all(24),
+      decoration: const BoxDecoration(
+        color: Color(0xFF18181C),
+        border: Border(right: BorderSide(color: Colors.black, width: 3)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFCCFF00),
+                  border: Border.all(color: Colors.black, width: 2),
+                ),
+                child: const Text('PF', style: TextStyle(color: Colors.black, fontFamily: 'Unbounded', fontWeight: FontWeight.w900, fontSize: 16)),
               ),
+              const SizedBox(width: 8),
+              const Text('PACEFLOW', style: TextStyle(color: Colors.white, fontFamily: 'Unbounded', fontWeight: FontWeight.w900, fontSize: 20)),
+            ],
+          ),
+          const SizedBox(height: 48),
+          _buildDesktopSidebarItem(Icons.crop_square, 'DASHBOARD', '/dashboard', false),
+          const SizedBox(height: 16),
+          _buildDesktopSidebarItem(Icons.crop_square, 'PLAN', '/dashboard', false),
+          const SizedBox(height: 16),
+          _buildDesktopSidebarItem(Icons.circle, 'LIVE RUN', '/dashboard', false, iconSize: 10),
+          const SizedBox(height: 16),
+          _buildDesktopSidebarItem(Icons.circle, 'ANALYTICS', '/dashboard', true, iconSize: 10),
+          const Spacer(),
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: const Color(0xFFFC4C02),
+              border: Border.all(color: Colors.black, width: 3),
+              boxShadow: const [BoxShadow(color: Colors.black, offset: Offset(4, 4))],
             ),
-          )
-        : MapWidget(
-            key: const ValueKey("mapboxWidget"),
-            onMapCreated: _onMapCreated,
-            styleUri: MapboxStyles.DARK,
-            cameraOptions: CameraOptions(
-              center: Point(coordinates: Position(-122.4194, 37.7749)),
-              zoom: 12.0,
+            child: const Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('PACEFLOW PREMIUM', style: TextStyle(color: Colors.white, fontFamily: 'Unbounded', fontWeight: FontWeight.w900, fontSize: 12)),
+                SizedBox(height: 12),
+                Text('Unlock advanced AI metrics, live ghost pacing & audio recovery engine.', style: TextStyle(color: Colors.white, fontSize: 12, fontFamily: 'Geist')),
+              ],
             ),
-          );
+          ),
+        ],
+      ),
+    );
   }
 
-  Widget _buildAnalyticsArea() {
-    return Container(
-              padding: const EdgeInsets.all(20),
-              child: SingleChildScrollView(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text("FATIGUE HEATMAP", style: Theme.of(context).textTheme.headlineLarge?.copyWith(fontSize: 20)),
-                    const SizedBox(height: 10),
-                    const Text("Red dots indicate where your cadence dropped and form degraded.", style: TextStyle(color: AppTheme.secondaryTextColor, fontSize: 14, fontFamily: 'Geist')),
-                    const SizedBox(height: 24),
-                    Row(
-                      children: [
-                        Text("AI RECOVERY COACH", style: Theme.of(context).textTheme.headlineLarge?.copyWith(fontSize: 20)),
-                        const SizedBox(width: 8),
-                        ref.watch(userProfileProvider).when(
-                          data: (profile) => profile.subscriptionTier == 'premium' 
-                            ? const Icon(Icons.auto_awesome, color: AppTheme.primaryColor)
-                            : const Icon(Icons.lock, color: Colors.grey, size: 20),
-                          loading: () => const SizedBox(),
-                          error: (_, __) => const SizedBox(),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 16),
-                    SingleChildScrollView(
-                      scrollDirection: Axis.horizontal,
-                      child: Row(
-                        children: ['Standard', 'Vegan', 'Keto', 'High-Protein'].map((diet) {
-                          final isSelected = selectedDiet == diet;
-                          return Padding(
-                            padding: const EdgeInsets.only(right: 8.0),
-                            child: GestureDetector(
-                              onTap: () {
-                                setState(() {
-                                  selectedDiet = diet;
-                                  _nutritionPlanFuture = _fetchNutritionPlan(diet);
-                                });
-                              },
-                              child: NeoBrutalistContainer(
-                                backgroundColor: isSelected ? AppTheme.accentColor : AppTheme.surfaceColor,
-                                shadowColor: Colors.black,
-                                shadowOffset: isSelected ? 1 : 2,
-                                borderWidth: 1.5,
-                                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                                child: Text(
-                                  diet.toUpperCase(),
-                                  style: TextStyle(
-                                    color: isSelected ? Colors.black : Colors.white,
-                                    fontFamily: 'Unbounded',
-                                    fontWeight: FontWeight.w900,
-                                    fontSize: 10,
-                                  ),
-                                ),
-                              ),
-                            ),
-                          );
-                        }).toList(),
-                      ),
-                    ),
-                    const SizedBox(height: 20),
-                    NeoBrutalistContainer(
-                      backgroundColor: AppTheme.surfaceColor,
-                      shadowColor: AppTheme.primaryColor,
-                      borderWidth: 2,
-                      shadowOffset: 4,
-                      padding: const EdgeInsets.all(16),
-                      child: FutureBuilder<String>(
-                        future: _nutritionPlanFuture,
-                        builder: (context, snapshot) {
-                          if (snapshot.connectionState == ConnectionState.waiting) {
-                            return const Center(child: Padding(padding: EdgeInsets.all(20), child: CircularProgressIndicator(color: AppTheme.primaryColor)));
-                          }
-                          if (snapshot.hasError) {
-                            return Text("Error: ${snapshot.error}", style: const TextStyle(color: Colors.redAccent, fontFamily: 'Geist'));
-                          }
-                          return Text(
-                            snapshot.data ?? "Failed to load nutrition plan",
-                            style: const TextStyle(color: Colors.white, fontSize: 14, height: 1.5, fontFamily: 'Geist'),
-                          );
-                        }
-                      ),
-                    )
-                  ],
-                ),
+  Widget _buildDesktopSidebarItem(IconData icon, String label, String route, bool isSelected, {double iconSize = 18}) {
+    return GestureDetector(
+      onTap: () {
+        if (!isSelected) context.go(route);
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        decoration: BoxDecoration(
+          color: isSelected ? const Color(0xFFCCFF00) : Colors.transparent,
+          border: isSelected ? Border.all(color: Colors.black, width: 2) : Border.all(color: Colors.transparent, width: 2),
+          boxShadow: isSelected ? const [BoxShadow(color: Colors.black, offset: Offset(4, 4))] : [],
+        ),
+        child: Row(
+          children: [
+            Icon(icon, color: isSelected ? Colors.black : const Color(0xFF8E8E93), size: iconSize),
+            const SizedBox(width: 12),
+            Text(
+              label,
+              style: TextStyle(
+                color: isSelected ? Colors.black : const Color(0xFF8E8E93),
+                fontFamily: 'Unbounded',
+                fontWeight: FontWeight.w800,
+                fontSize: 12,
               ),
-            );
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDesktopHeader() {
+    return Row(
+      children: [
+        GestureDetector(
+          onTap: () => context.go('/dashboard'),
+          child: const Text(
+            '< DASHBOARD',
+            style: TextStyle(color: Color(0xFFFC4C02), fontFamily: 'Unbounded', fontWeight: FontWeight.w900, fontSize: 14),
+          ),
+        ),
+        const SizedBox(width: 24),
+        const Text(
+          'POST-RUN ANALYTICS',
+          style: TextStyle(color: Colors.white, fontFamily: 'Unbounded', fontWeight: FontWeight.w900, fontSize: 24),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildDesktopGhostPacerCard() {
+    return Container(
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: const Color(0xFF18181C),
+        border: Border.all(color: Colors.black, width: 3),
+        boxShadow: const [BoxShadow(color: Colors.black, offset: Offset(6, 6))],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text('GHOST PACER SUMMARY', style: TextStyle(color: Colors.white, fontFamily: 'Unbounded', fontWeight: FontWeight.w900, fontSize: 14)),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF9B51E0),
+                  border: Border.all(color: Colors.black, width: 1.5),
+                ),
+                child: const Text('VICTORY', style: TextStyle(color: Colors.white, fontFamily: 'Unbounded', fontWeight: FontWeight.w900, fontSize: 10)),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          const Text('BEAT TARGET BY 14 SECONDS', style: TextStyle(color: Color(0xFFCCFF00), fontFamily: 'Unbounded', fontWeight: FontWeight.w900, fontSize: 24)),
+          const SizedBox(height: 8),
+          const Text('You held off the ghost pacer efficiently during the final mile push.', style: TextStyle(color: Color(0xFF8E8E93), fontFamily: 'Geist', fontSize: 14)),
+        ],
+      ),
+    );
   }
 }

@@ -170,7 +170,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
         ),
       ),
       bottomNavigationBar: Container(
-        color: AppTheme.backgroundColor,
         padding: const EdgeInsets.only(left: 16, right: 16, bottom: 24, top: 12),
         decoration: BoxDecoration(
           border: const Border(top: BorderSide(color: AppTheme.primaryColor, width: 2)),
@@ -258,9 +257,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
   Widget _buildDesktopSidebar() {
     return Container(
       width: 250,
-      color: AppTheme.backgroundColor,
       padding: const EdgeInsets.symmetric(vertical: 32, horizontal: 16),
       decoration: const BoxDecoration(
+        color: AppTheme.backgroundColor,
         border: Border(right: BorderSide(color: Color(0xFF333333), width: 1)),
       ),
       child: Column(
@@ -1641,12 +1640,7 @@ class _PreRunSetupBottomSheetState extends ConsumerState<PreRunSetupBottomSheet>
           
           InkWell(
             onTap: () {
-              showModalBottomSheet(
-                context: context,
-                isScrollControlled: true,
-                backgroundColor: Colors.transparent,
-                builder: (context) => const DeviceScannerScreen(),
-              );
+              context.push('/scanner');
             },
             child: Padding(
               padding: const EdgeInsets.symmetric(vertical: 8.0),
