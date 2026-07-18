@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:paceflow/core/theme/app_theme.dart';
-import 'package:paceflow/core/ui/neo_brutalist_container.dart';
+import '../theme/app_theme.dart';
+import 'neo_brutalist_container.dart';
 
 class NeoBrutalistButton extends StatefulWidget {
   final VoidCallback onPressed;

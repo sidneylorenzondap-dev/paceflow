@@ -4,8 +4,6 @@ import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:http/http.dart' as http;
 import '../../../core/constants/api_constants.dart';
-import '../../user/presentation/providers/user_profile_provider.dart';
-import '../../user/presentation/screens/profile_screen.dart';
 import '../../training/presentation/saved_plans_screen.dart';
 import '../../run/presentation/device_scanner_screen.dart';
 import '../../run/data/ble_service.dart';
