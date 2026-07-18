@@ -377,30 +377,335 @@ class _DashboardScreenState extends State<DashboardScreen> {
   Widget _buildHomeDesktopView() {
     return SingleChildScrollView(
       padding: const EdgeInsets.all(40.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          _buildDesktopWelcomeHeader(),
+          const SizedBox(height: 40),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    _buildPrSection(),
+                    const SizedBox(height: 32),
+                    _buildAiOptimizeCard(),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 40),
+              SizedBox(
+                width: 450,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    _buildDesktopActiveGoalSection(),
+                    const SizedBox(height: 32),
+                    _buildRecentActivitySection(),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDesktopWelcomeHeader() {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      crossAxisAlignment: CrossAxisAlignment.end,
+      children: [
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'WELCOME BACK,',
+              style: TextStyle(
+                fontFamily: 'Geist',
+                fontWeight: FontWeight.w600,
+                fontSize: 14,
+                color: AppTheme.secondaryTextColor,
+              ),
+            ),
+            Text(
+              'ALEXANDER',
+              style: Theme.of(context).textTheme.displayLarge?.copyWith(fontSize: 32),
+            ),
+          ],
+        ),
+        NeoBrutalistButton(
+          onPressed: _showPreRunSetupBottomSheet,
+          backgroundColor: AppTheme.primaryColor,
+          child: const Padding(
+            padding: EdgeInsets.symmetric(horizontal: 16.0, vertical: 4.0),
+            child: Text(
+              'START NEW RUN',
+              style: TextStyle(
+                color: Colors.black,
+                fontFamily: 'Unbounded',
+                fontWeight: FontWeight.w900,
+                fontSize: 16,
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildAiOptimizeCard() {
+    return NeoBrutalistContainer(
+      backgroundColor: const Color(0xFFFC4C02),
+      borderWidth: 3,
+      shadowOffset: 4,
+      padding: const EdgeInsets.all(24),
       child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Expanded(
-            flex: 3,
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _buildWelcomeHeader(),
-                const SizedBox(height: 40),
-                _buildActiveGoalSection(),
-                const SizedBox(height: 40),
-                _buildPrSection(),
+                Row(
+                  children: [
+                    const Icon(Icons.auto_awesome, color: Colors.white, size: 14),
+                    const SizedBox(width: 8),
+                    Text(
+                      'PACEFLOW ENGINE V2.1',
+                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                            color: Colors.white,
+                            fontSize: 11,
+                          ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'REGENERATE AI PLAN',
+                  style: Theme.of(context).textTheme.displayLarge?.copyWith(fontSize: 22, color: Colors.white),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'Re-analyze sleep, load, and muscle fatigue to optimize your remaining 5 weeks of the Sub-45 10K schedule.',
+                  style: TextStyle(
+                    fontFamily: 'Geist',
+                    fontSize: 14,
+                    color: Colors.white.withOpacity(0.9),
+                  ),
+                ),
               ],
             ),
           ),
-          const SizedBox(width: 40),
+          const SizedBox(width: 24),
+          NeoBrutalistButton(
+            onPressed: () {},
+            backgroundColor: AppTheme.primaryColor,
+            borderWidth: 2,
+            child: const Text(
+              'OPTIMIZE NOW',
+              style: TextStyle(
+                color: Colors.black,
+                fontFamily: 'Unbounded',
+                fontWeight: FontWeight.w900,
+                fontSize: 12,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDesktopActiveGoalSection() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'ACTIVE GOAL',
+          style: Theme.of(context).textTheme.headlineLarge?.copyWith(fontSize: 14),
+        ),
+        const SizedBox(height: 12),
+        NeoBrutalistContainer(
+          backgroundColor: AppTheme.surfaceColor,
+          shadowColor: AppTheme.primaryColor,
+          borderWidth: 3,
+          shadowOffset: 4,
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'SUB-45:00 10K',
+                    style: Theme.of(context).textTheme.displayLarge?.copyWith(fontSize: 18),
+                  ),
+                  NeoBrutalistContainer(
+                    backgroundColor: const Color(0xFFFC4C02),
+                    borderWidth: 2,
+                    shadowOffset: 0,
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    child: Text(
+                      'AI ADJUSTED',
+                      style: Theme.of(context).textTheme.titleLarge?.copyWith(fontSize: 10, color: Colors.white),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 20),
+              const Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    '62% COMPLETED',
+                    style: TextStyle(
+                      fontFamily: 'Unbounded',
+                      fontWeight: FontWeight.w900,
+                      fontSize: 11,
+                      color: AppTheme.primaryColor,
+                    ),
+                  ),
+                  Text(
+                    'Week 3 of 8',
+                    style: TextStyle(
+                      fontFamily: 'Geist',
+                      color: AppTheme.secondaryTextColor,
+                      fontSize: 12,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              Container(
+                height: 16,
+                decoration: BoxDecoration(
+                  color: AppTheme.surfaceColor,
+                  border: Border.all(color: Colors.black, width: 2),
+                ),
+                child: Row(
+                  children: [
+                    Expanded(
+                      flex: 62,
+                      child: Container(color: AppTheme.primaryColor),
+                    ),
+                    Expanded(
+                      flex: 38,
+                      child: Container(),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 20),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text(
+                    'Pace Target: 4:30/km',
+                    style: TextStyle(
+                      fontFamily: 'Geist',
+                      color: AppTheme.secondaryTextColor,
+                      fontSize: 13,
+                    ),
+                  ),
+                  NeoBrutalistButton(
+                    onPressed: () {},
+                    backgroundColor: Colors.white,
+                    child: const Text(
+                      'VIEW PLAN',
+                      style: TextStyle(
+                        fontFamily: 'Unbounded',
+                        fontWeight: FontWeight.w900,
+                        fontSize: 11,
+                        color: Colors.black,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildRecentActivitySection() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              'RECENT ACTIVITY',
+              style: Theme.of(context).textTheme.headlineLarge?.copyWith(fontSize: 14),
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        Column(
+          children: [
+            _buildActivityItem('8.2 KM INTENSITY RUN', '46:12', 'Today, 6:00 AM', const Color(0xFFFC4C02)),
+            const SizedBox(height: 12),
+            _buildActivityItem('5.0 KM RECOVERY', '28:45', 'Yesterday, 5:30 PM', AppTheme.primaryColor),
+            const SizedBox(height: 12),
+            _buildActivityItem('10.0 KM LONG RUN', '58:20', 'Saturday, 6:30 AM', AppTheme.accentColor),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildActivityItem(String title, String time, String date, Color color) {
+    return NeoBrutalistContainer(
+      backgroundColor: AppTheme.surfaceColor,
+      borderWidth: 2,
+      shadowOffset: 0,
+      padding: const EdgeInsets.all(12),
+      child: Row(
+        children: [
+          Container(
+            width: 6,
+            height: 40,
+            color: color,
+          ),
+          const SizedBox(width: 12),
           Expanded(
-            flex: 2,
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _buildActionsSection(),
+                Text(
+                  title,
+                  style: const TextStyle(
+                    fontFamily: 'Unbounded',
+                    fontWeight: FontWeight.w800,
+                    fontSize: 11,
+                    color: Colors.white,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  date,
+                  style: const TextStyle(
+                    fontFamily: 'Geist',
+                    color: AppTheme.secondaryTextColor,
+                    fontSize: 12,
+                  ),
+                ),
               ],
+            ),
+          ),
+          Text(
+            time,
+            style: const TextStyle(
+              fontFamily: 'Unbounded',
+              fontWeight: FontWeight.w800,
+              fontSize: 16,
+              color: Colors.white,
             ),
           ),
         ],
