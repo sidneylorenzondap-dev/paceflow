@@ -470,6 +470,37 @@ class _TrainingPlanScreenState extends ConsumerState<TrainingPlanScreen> {
               workout.description,
               style: const TextStyle(color: AppTheme.secondaryTextColor, fontSize: 14, fontFamily: 'Geist'),
             ),
+            if (workout.type.toLowerCase() != 'rest') ...[
+              const SizedBox(height: 16),
+              SizedBox(
+                width: double.infinity,
+                child: NeoBrutalistButton(
+                  onPressed: () {
+                    context.push('/run', extra: {
+                      'targetDistance': 'Custom',
+                      'targetPaceSeconds': 300.0,
+                      'isGhostRacing': false,
+                      'strictness': 'Standard',
+                      'isBaseline': false,
+                    });
+                  },
+                  backgroundColor: AppTheme.primaryColor,
+                  child: const Padding(
+                    padding: EdgeInsets.symmetric(vertical: 12),
+                    child: Text(
+                      'START WORKOUT',
+                      style: TextStyle(
+                        fontFamily: 'Unbounded',
+                        fontWeight: FontWeight.w900,
+                        fontSize: 14,
+                        color: Colors.black,
+                        letterSpacing: 1.2,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ],
           ],
         ),
       ),

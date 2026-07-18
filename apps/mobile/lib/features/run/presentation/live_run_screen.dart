@@ -365,100 +365,121 @@ class _LiveRunScreenState extends ConsumerState<LiveRunScreen> {
 
   Widget _buildControls(dynamic state, dynamic notifier, dynamic locationState, dynamic locationNotifier) {
     if (!state.isRunning) {
-      return NeoBrutalistButton(
-        onPressed: () {
-          setState(() { _isPaused = false; });
-          notifier.startRun(
-            isGhostRace: widget.isGhostRacing,
-            distance: widget.targetDistance,
-            paceSeconds: widget.targetPaceSeconds,
-            strictness: widget.strictness,
-          );
-          locationNotifier.startTracking();
-        },
-        backgroundColor: AppTheme.primaryColor,
-        width: 80,
-        height: 80,
-        borderRadius: 40,
-        child: const Icon(Icons.play_arrow_rounded, size: 40, color: Colors.black),
-      );
-    } else if (!_isPaused) {
-      return NeoBrutalistButton(
-        onPressed: () {
-          setState(() { _isPaused = true; });
-        },
-        backgroundColor: AppTheme.primaryColor,
-        width: 80,
-        height: 80,
-        borderRadius: 40,
-        child: const Icon(Icons.pause_rounded, size: 40, color: Colors.black),
+      return SizedBox(
+        width: double.infinity,
+        child: NeoBrutalistButton(
+          onPressed: () {
+            setState(() { _isPaused = false; });
+            notifier.startRun(
+              isGhostRace: widget.isGhostRacing,
+              distance: widget.targetDistance,
+              paceSeconds: widget.targetPaceSeconds,
+              strictness: widget.strictness,
+            );
+            locationNotifier.startTracking();
+          },
+          backgroundColor: AppTheme.primaryColor,
+          child: const Padding(
+            padding: EdgeInsets.symmetric(vertical: 16),
+            child: Text(
+              'START RUN',
+              style: TextStyle(fontFamily: 'Unbounded', fontWeight: FontWeight.w900, fontSize: 20, color: Colors.black, letterSpacing: 1.5),
+            ),
+          ),
+        ),
       );
     } else {
       return Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          NeoBrutalistButton(
-            onPressed: () {
-              setState(() { _isPaused = false; });
-            },
-            backgroundColor: AppTheme.primaryColor,
-            width: 80,
-            height: 80,
-            borderRadius: 40,
-            child: const Icon(Icons.play_arrow_rounded, size: 40, color: Colors.black),
+          Expanded(
+            child: NeoBrutalistButton(
+              onPressed: () async {
+                setState(() { _isPaused = false; });
+                notifier.stopRun();
+                locationNotifier.stopTracking();
+
+                // Save run session
+                final session = Supabase.instance.client.auth.currentSession;
+                final token = session?.accessToken;
+                if (token != null) {
+                  try {
+                    final url = Uri.parse('${ApiConstants.baseUrl}/training/session/save');
+                    await http.post(url, 
+                      headers: {
+                        'Authorization': 'Bearer $token',
+                        'Content-Type': 'application/json'
+                      },
+                      body: jsonEncode({
+                        'totalTimeSecs': widget.isBaseline ? 8400 : locationState.elapsedSeconds,
+                        'distanceMeters': widget.isBaseline ? 20000 : locationState.totalDistanceKm * 1000,
+                        'isBaseline': widget.isBaseline,
+                      })
+                    );
+                  } catch (e) {
+                    debugPrint('Error saving run session: $e');
+                  }
+                }
+
+                if (widget.isBaseline) {
+                  if (context.mounted) {
+                    context.push('/analytics', extra: {
+                      'isBaseline': true,
+                      'pendingPlanGoal': widget.pendingPlanGoal
+                    });
+                  }
+                } else {
+                  if (context.mounted) {
+                    context.push('/analytics');
+                  }
+                }
+              },
+              backgroundColor: AppTheme.accentColor,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: const [
+                    Icon(Icons.stop_rounded, color: Colors.white),
+                    SizedBox(width: 8),
+                    Text(
+                      'STOP',
+                      style: TextStyle(fontFamily: 'Unbounded', fontWeight: FontWeight.w900, fontSize: 16, color: Colors.white, letterSpacing: 1),
+                    ),
+                  ],
+                ),
+              ),
+            ),
           ),
-          const SizedBox(width: 32),
-          NeoBrutalistButton(
-            onPressed: () async {
-              setState(() { _isPaused = false; });
-              notifier.stopRun();
-              locationNotifier.stopTracking();
-
-              // Save run session
-              final session = Supabase.instance.client.auth.currentSession;
-              final token = session?.accessToken;
-              if (token != null) {
-                try {
-                  final url = Uri.parse('${ApiConstants.baseUrl}/training/session/save');
-                  await http.post(url, 
-                    headers: {
-                      'Authorization': 'Bearer $token',
-                      'Content-Type': 'application/json'
-                    },
-                    body: jsonEncode({
-                      'totalTimeSecs': widget.isBaseline ? 8400 : locationState.elapsedSeconds,
-                      'distanceMeters': widget.isBaseline ? 20000 : locationState.totalDistanceKm * 1000,
-                      'isBaseline': widget.isBaseline,
-                    })
-                  );
-                } catch (e) {
-                  debugPrint('Error saving run session: $e');
-                }
-              }
-
-              if (widget.isBaseline) {
-                if (context.mounted) {
-                  context.push('/analytics', extra: {
-                    'isBaseline': true,
-                    'pendingPlanGoal': widget.pendingPlanGoal
-                  });
-                }
-              } else {
-                if (context.mounted) {
-                  context.push('/analytics');
-                }
-              }
-            },
-            backgroundColor: AppTheme.accentColor,
-            width: 80,
-            height: 80,
-            borderRadius: 40,
-            child: const Icon(Icons.stop_rounded, size: 40, color: Colors.black),
+          const SizedBox(width: 16),
+          Expanded(
+            child: NeoBrutalistButton(
+              onPressed: () {
+                setState(() { _isPaused = !_isPaused; });
+              },
+              backgroundColor: AppTheme.primaryColor,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(_isPaused ? Icons.play_arrow_rounded : Icons.pause_rounded, color: Colors.black),
+                    const SizedBox(width: 8),
+                    Text(
+                      _isPaused ? 'RESUME' : 'PAUSE',
+                      style: const TextStyle(fontFamily: 'Unbounded', fontWeight: FontWeight.w900, fontSize: 16, color: Colors.black, letterSpacing: 1),
+                    ),
+                  ],
+                ),
+              ),
+            ),
           ),
         ],
       );
     }
   }
+
+
 
   Widget _buildMetric(String label, String value, String unit) {
     return Column(

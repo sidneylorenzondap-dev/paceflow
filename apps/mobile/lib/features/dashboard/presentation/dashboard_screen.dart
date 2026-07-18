@@ -944,7 +944,7 @@ class _GoalSelectionBottomSheetState extends ConsumerState<GoalSelectionBottomSh
           userProfileAsync.when(
             data: (profile) => Column(
               children: [
-                ElevatedButton(
+                NeoBrutalistButton(
                   onPressed: () {
                     if (profile.subscriptionTier == 'free') {
                       Navigator.pop(context);
@@ -959,27 +959,22 @@ class _GoalSelectionBottomSheetState extends ConsumerState<GoalSelectionBottomSh
                       ref.refresh(userProfileProvider.future);
                     }
                   },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: (profile.subscriptionTier == 'free' || profile.aiCredits > 0) ? const Color(0xFF4A90E2) : Colors.red[800],
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                  ),
+                  backgroundColor: AppTheme.primaryColor,
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       if (profile.subscriptionTier == 'premium')
-                        const Icon(Icons.auto_awesome, color: Colors.white, size: 20),
+                        const Icon(Icons.auto_awesome, color: Colors.black, size: 20),
                       if (profile.subscriptionTier == 'premium')
                         const SizedBox(width: 8),
                       Text(
-                        profile.subscriptionTier == 'free' ? 'GENERATE PLAN (STATIC)' : (profile.aiCredits > 0 ? 'GENERATE AI PLAN' : 'OUT OF CREDITS'),
+                        profile.subscriptionTier == 'free' ? 'GENERATE PLAN (STATIC)' : (profile.aiCredits > 0 ? 'REGENERATE AI PLAN' : 'OUT OF CREDITS'),
                         style: const TextStyle(
                           fontSize: 16,
-                          fontWeight: FontWeight.bold,
+                          fontFamily: 'Unbounded',
+                          fontWeight: FontWeight.w900,
                           letterSpacing: 1.2,
-                          color: Colors.white,
+                          color: Colors.black,
                         ),
                       ),
                     ],
@@ -1054,7 +1049,7 @@ class _GoalSelectionBottomSheetState extends ConsumerState<GoalSelectionBottomSh
               const SizedBox(height: 32),
               SizedBox(
                 width: double.infinity,
-                child: ElevatedButton(
+                child: NeoBrutalistButton(
                   onPressed: () {
                     Navigator.pop(context);
                     // TODO: Implement Premium Checkout
@@ -1062,18 +1057,13 @@ class _GoalSelectionBottomSheetState extends ConsumerState<GoalSelectionBottomSh
                       const SnackBar(content: Text('Checkout coming soon!')),
                     );
                   },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFFFC4C02),
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                  ),
+                  backgroundColor: AppTheme.accentColor,
                   child: const Text(
                     'UPGRADE FOR \$9.99/mo',
                     style: TextStyle(
                       fontSize: 16,
-                      fontWeight: FontWeight.bold,
+                      fontFamily: 'Unbounded',
+                      fontWeight: FontWeight.w900,
                       letterSpacing: 1.2,
                       color: Colors.white,
                     ),
@@ -1354,7 +1344,7 @@ class _PreRunSetupBottomSheetState extends ConsumerState<PreRunSetupBottomSheet>
           ),
           
           const SizedBox(height: 32),
-          ElevatedButton(
+          NeoBrutalistButton(
             onPressed: () {
               final finalDistance = _selectedDistance == 'Other...' 
                   ? (_customDistanceController.text.isNotEmpty ? '${_customDistanceController.text}K' : 'Custom') 
@@ -1368,19 +1358,14 @@ class _PreRunSetupBottomSheetState extends ConsumerState<PreRunSetupBottomSheet>
                 'isGhostRacing': _isGhostRacing,
               });
             },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Theme.of(context).colorScheme.primary,
-              padding: const EdgeInsets.symmetric(vertical: 20),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
-              ),
-            ),
+            backgroundColor: AppTheme.primaryColor,
             child: const Text(
-              'START GPS',
+              'START RUN',
               style: TextStyle(
                 fontSize: 18,
-                fontWeight: FontWeight.bold,
-                letterSpacing: 1.2,
+                fontFamily: 'Unbounded',
+                fontWeight: FontWeight.w900,
+                letterSpacing: 1.5,
                 color: Colors.black,
               ),
             ),

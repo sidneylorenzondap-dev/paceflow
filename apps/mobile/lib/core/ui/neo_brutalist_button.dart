@@ -22,7 +22,7 @@ class NeoBrutalistButton extends StatefulWidget {
     this.shadowColor = Colors.black,
     this.borderColor = Colors.black,
     this.borderWidth = 2.0,
-    this.borderRadius = 8.0,
+    this.borderRadius = 0.0,
     this.shadowOffset = 4.0,
     this.width,
     this.height,
