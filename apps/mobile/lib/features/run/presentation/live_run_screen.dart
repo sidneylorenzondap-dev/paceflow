@@ -225,7 +225,7 @@ class _LiveRunScreenState extends ConsumerState<LiveRunScreen> {
                       ),
                     ],
                   ),
-                ),
+                )
               else
                 const SizedBox(height: 104), // Space placeholder
               

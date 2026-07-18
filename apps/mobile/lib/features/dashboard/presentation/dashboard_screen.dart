@@ -4,6 +4,9 @@ import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:http/http.dart' as http;
 import '../../../core/constants/api_constants.dart';
+import '../../user/presentation/providers/user_profile_provider.dart';
+import '../../user/presentation/screens/profile_screen.dart';
+import '../../training/presentation/saved_plans_screen.dart';
 import '../../run/presentation/device_scanner_screen.dart';
 import '../../run/data/ble_service.dart';
 import '../../activities/presentation/activities_screen.dart';
@@ -127,8 +130,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
             },
             itemBuilder: (context) => [
               const PopupMenuItem(
-                value: 'profile',
-                child: Row(
                 value: 'preferences',
                 child: Row(
                   children: [
@@ -178,7 +179,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
             _buildNavItem(Icons.event_note, 'PLANS', 2),
           ],
         ),
-      ),
       ),
     );
   }
@@ -944,63 +944,67 @@ class _GoalSelectionBottomSheetState extends ConsumerState<GoalSelectionBottomSh
           ),
           const SizedBox(height: 32),
           userProfileAsync.when(
-            data: (profile) => ElevatedButton(
-              onPressed: () {
-                if (profile.subscriptionTier == 'free') {
-                  Navigator.pop(context);
-                  context.push('/training', extra: 'Distance: $_selectedDistance, Target Pace: $_formattedPace');
-                  ref.refresh(userProfileProvider.future);
-                } else if (profile.aiCredits <= 0) {
-                  Navigator.pop(context);
-                  _showPremiumPaywall(context);
-                } else {
-                  Navigator.pop(context);
-                  context.push('/training', extra: 'Distance: $_selectedDistance, Target Pace: $_formattedPace');
-                  ref.refresh(userProfileProvider.future);
-                }
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: (profile.subscriptionTier == 'free' || profile.aiCredits > 0) ? const Color(0xFF4A90E2) : Colors.red[800],
-                padding: const EdgeInsets.symmetric(vertical: 16),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16),
-                ),
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  if (profile.subscriptionTier == 'premium')
-                    const Icon(Icons.auto_awesome, color: Colors.white, size: 20),
-                  if (profile.subscriptionTier == 'premium')
-                    const SizedBox(width: 8),
-                  Text(
-                    profile.subscriptionTier == 'free' ? 'GENERATE PLAN (STATIC)' : (profile.aiCredits > 0 ? 'GENERATE AI PLAN' : 'OUT OF CREDITS'),
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                      letterSpacing: 1.2,
-                      color: Colors.white,
+            data: (profile) => Column(
+              children: [
+                ElevatedButton(
+                  onPressed: () {
+                    if (profile.subscriptionTier == 'free') {
+                      Navigator.pop(context);
+                      context.push('/training', extra: 'Distance: $_selectedDistance, Target Pace: $_formattedPace');
+                      ref.refresh(userProfileProvider.future);
+                    } else if (profile.aiCredits <= 0) {
+                      Navigator.pop(context);
+                      _showPremiumPaywall(context);
+                    } else {
+                      Navigator.pop(context);
+                      context.push('/training', extra: 'Distance: $_selectedDistance, Target Pace: $_formattedPace');
+                      ref.refresh(userProfileProvider.future);
+                    }
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: (profile.subscriptionTier == 'free' || profile.aiCredits > 0) ? const Color(0xFF4A90E2) : Colors.red[800],
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
                     ),
                   ),
-                ],
-              ),
-            ),
-            if (profile.subscriptionTier == 'free') ...[
-              const SizedBox(height: 12),
-              GestureDetector(
-                onTap: () => _showPremiumPaywall(context),
-                child: const Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(Icons.lock, color: Colors.grey, size: 16),
-                    SizedBox(width: 4),
-                    Text('Unlock dynamic AI plans with Premium', style: TextStyle(color: Colors.grey, decoration: TextDecoration.underline)),
-                  ],
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      if (profile.subscriptionTier == 'premium')
+                        const Icon(Icons.auto_awesome, color: Colors.white, size: 20),
+                      if (profile.subscriptionTier == 'premium')
+                        const SizedBox(width: 8),
+                      Text(
+                        profile.subscriptionTier == 'free' ? 'GENERATE PLAN (STATIC)' : (profile.aiCredits > 0 ? 'GENERATE AI PLAN' : 'OUT OF CREDITS'),
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: 1.2,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-              )
-            ],
+                if (profile.subscriptionTier == 'free') ...[
+                  const SizedBox(height: 12),
+                  GestureDetector(
+                    onTap: () => _showPremiumPaywall(context),
+                    child: const Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.lock, color: Colors.grey, size: 16),
+                        SizedBox(width: 4),
+                        Text('Unlock dynamic AI plans with Premium', style: TextStyle(color: Colors.grey, decoration: TextDecoration.underline)),
+                      ],
+                    ),
+                  )
+                ],
+              ],
+            ),
             loading: () => const Center(child: CircularProgressIndicator()),
-            error: (_, __) => const Center(child: Text('Failed to load profile', style: TextStyle(color: Colors.red))),
+            error: (error, stack) => Center(child: Text('Error: $error')),
           ),
         ],
       ),

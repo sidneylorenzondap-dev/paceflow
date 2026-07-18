@@ -8,7 +8,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../core/constants/api_constants.dart';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../user/presentation/providers/user_profile_provider.dart';
+import '../../user/data/user_service.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/ui/neo_brutalist_container.dart';
 import '../../../core/ui/neo_brutalist_button.dart';
@@ -86,15 +86,17 @@ class _PostRunAnalyticsScreenState extends ConsumerState<PostRunAnalyticsScreen>
                       child: const Text('LATER', style: TextStyle(color: AppTheme.secondaryTextColor, fontFamily: 'Unbounded', fontWeight: FontWeight.bold)),
                     ),
                     const SizedBox(width: 16),
-                    NeoBrutalistButton(
-                      onPressed: () {
-                        Navigator.pop(context);
-                        context.push('/training', extra: {'goal': widget.pendingPlanGoal});
-                      },
-                      backgroundColor: AppTheme.primaryColor,
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                      child: const Text('GENERATE PLAN'),
-                    ),
+                      NeoBrutalistButton(
+                        onPressed: () {
+                          Navigator.pop(context);
+                          context.push('/training', extra: {'goal': widget.pendingPlanGoal});
+                        },
+                        backgroundColor: AppTheme.primaryColor,
+                        child: const Padding(
+                          padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                          child: Text('GENERATE PLAN'),
+                        ),
+                      ),
                   ],
                 ),
               ],
@@ -142,15 +144,17 @@ class _PostRunAnalyticsScreenState extends ConsumerState<PostRunAnalyticsScreen>
                       child: const Text('NOT RIGHT NOW', style: TextStyle(color: AppTheme.secondaryTextColor, fontFamily: 'Unbounded', fontWeight: FontWeight.bold)),
                     ),
                     const SizedBox(width: 16),
-                    NeoBrutalistButton(
-                      onPressed: () {
-                        Navigator.pop(context);
-                        context.go('/training');
-                      },
-                      backgroundColor: AppTheme.primaryColor,
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                      child: const Text('LEVEL UP!'),
-                    ),
+                      NeoBrutalistButton(
+                        onPressed: () {
+                          Navigator.pop(context);
+                          context.go('/training');
+                        },
+                        backgroundColor: AppTheme.primaryColor,
+                        child: const Padding(
+                          padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                          child: Text('LEVEL UP!'),
+                        ),
+                      ),
                   ],
                 ),
               ],
@@ -374,8 +378,6 @@ class _PostRunAnalyticsScreenState extends ConsumerState<PostRunAnalyticsScreen>
                   ],
                 ),
               ),
-            ),
-            ),
-          );
+            );
   }
 }

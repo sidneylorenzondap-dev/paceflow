@@ -115,14 +115,16 @@ class _TrainingPlanScreenState extends ConsumerState<TrainingPlanScreen> {
               onPressed: _setActivePlan,
               backgroundColor: AppTheme.primaryColor,
               shadowColor: Colors.black,
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: const [
-                  Icon(Icons.check_circle_outline, color: Colors.black, size: 20),
-                  SizedBox(width: 8),
-                  Text('SET AS ACTIVE', style: TextStyle(color: Colors.black, fontWeight: FontWeight.w900)),
-                ],
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: const [
+                    Icon(Icons.check_circle_outline, color: Colors.black, size: 20),
+                    SizedBox(width: 8),
+                    Text('SET AS ACTIVE', style: TextStyle(color: Colors.black, fontWeight: FontWeight.w900)),
+                  ],
+                ),
               ),
             ),
             const SizedBox(height: 16),
@@ -131,14 +133,16 @@ class _TrainingPlanScreenState extends ConsumerState<TrainingPlanScreen> {
             onPressed: () => context.push('/training/chat'),
             backgroundColor: AppTheme.accentColor,
             shadowColor: Colors.black,
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: const [
-                Icon(Icons.chat_bubble_outline, color: Colors.black, size: 20),
-                SizedBox(width: 8),
-                Text('ADJUST PLAN', style: TextStyle(color: Colors.black, fontWeight: FontWeight.w900)),
-              ],
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: const [
+                  Icon(Icons.chat_bubble_outline, color: Colors.black, size: 20),
+                  SizedBox(width: 8),
+                  Text('ADJUST PLAN', style: TextStyle(color: Colors.black, fontWeight: FontWeight.w900)),
+                ],
+              ),
             ),
           ),
         ],
