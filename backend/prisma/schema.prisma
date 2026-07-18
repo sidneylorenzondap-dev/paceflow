@@ -93,3 +93,21 @@ model PaceflowSimulation {
 
   @@schema("paceflow")
 }
+
+model PaceflowStaticPlan {
+  id          String   @id @default(uuid())
+  title       String   
+  distance    String   
+  level       String   
+  planData    Json     
+  
+  @@schema("paceflow")
+}
+
+model PaceflowStaticRecovery {
+  id          String   @id @default(uuid())
+  type        String   
+  advice      Json     
+  
+  @@schema("paceflow")
+}

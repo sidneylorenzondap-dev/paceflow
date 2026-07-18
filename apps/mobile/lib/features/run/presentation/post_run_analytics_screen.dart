@@ -7,7 +7,14 @@ import 'package:http/http.dart' as http;
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../core/constants/api_constants.dart';
 
-class PostRunAnalyticsScreen extends StatefulWidget {
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../user/presentation/providers/user_profile_provider.dart';
+import '../../../core/theme/app_theme.dart';
+import '../../../core/ui/neo_brutalist_container.dart';
+import '../../../core/ui/neo_brutalist_button.dart';
+import '../../../core/ui/responsive_layout.dart';
+
+class PostRunAnalyticsScreen extends ConsumerStatefulWidget {
   final String geoJsonData;
   final double distanceMeters;
   final bool isHistoryView;
@@ -27,7 +34,7 @@ class PostRunAnalyticsScreen extends StatefulWidget {
   _PostRunAnalyticsScreenState createState() => _PostRunAnalyticsScreenState();
 }
 
-class _PostRunAnalyticsScreenState extends State<PostRunAnalyticsScreen> {
+class _PostRunAnalyticsScreenState extends ConsumerState<PostRunAnalyticsScreen> {
   MapboxMap? mapboxMap;
   String selectedDiet = 'Standard';
   late Future<String> _nutritionPlanFuture;
@@ -48,33 +55,51 @@ class _PostRunAnalyticsScreenState extends State<PostRunAnalyticsScreen> {
       showDialog(
         context: context,
         barrierDismissible: false,
-        builder: (context) => AlertDialog(
-          backgroundColor: Colors.grey[900],
-          title: const Row(
-            children: [
-              Icon(Icons.auto_awesome, color: Color(0xFFFC4C02), size: 32),
-              SizedBox(width: 8),
-              Text('Baseline Complete!', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-            ],
-          ),
-          content: Text(
-            'Great job! We now have your baseline data for ${widget.pendingPlanGoal}. Are you ready to generate your AI Training Plan?',
-            style: const TextStyle(color: Colors.white70),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Later', style: TextStyle(color: Colors.grey)),
+        builder: (context) => Dialog(
+          backgroundColor: Colors.transparent,
+          child: NeoBrutalistContainer(
+            backgroundColor: AppTheme.surfaceColor,
+            shadowColor: AppTheme.primaryColor,
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    const Icon(Icons.auto_awesome, color: AppTheme.primaryColor, size: 32),
+                    const SizedBox(width: 8),
+                    Expanded(child: Text('BASELINE COMPLETE!', style: Theme.of(context).textTheme.headlineLarge?.copyWith(fontSize: 18))),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  'Great job! We now have your baseline data for ${widget.pendingPlanGoal}. Are you ready to generate your AI Training Plan?',
+                  style: const TextStyle(color: AppTheme.secondaryTextColor, fontFamily: 'Geist'),
+                ),
+                const SizedBox(height: 24),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    TextButton(
+                      onPressed: () => Navigator.pop(context),
+                      child: const Text('LATER', style: TextStyle(color: AppTheme.secondaryTextColor, fontFamily: 'Unbounded', fontWeight: FontWeight.bold)),
+                    ),
+                    const SizedBox(width: 16),
+                    NeoBrutalistButton(
+                      onPressed: () {
+                        Navigator.pop(context);
+                        context.push('/training', extra: {'goal': widget.pendingPlanGoal});
+                      },
+                      backgroundColor: AppTheme.primaryColor,
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                      child: const Text('GENERATE PLAN'),
+                    ),
+                  ],
+                ),
+              ],
             ),
-            ElevatedButton(
-              onPressed: () {
-                Navigator.pop(context);
-                context.push('/training', extra: {'goal': widget.pendingPlanGoal});
-              },
-              style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFFC4C02)),
-              child: const Text('Generate Plan'),
-            ),
-          ],
+          ),
         ),
       );
       return;
@@ -86,33 +111,51 @@ class _PostRunAnalyticsScreenState extends State<PostRunAnalyticsScreen> {
       showDialog(
         context: context,
         barrierDismissible: false,
-        builder: (context) => AlertDialog(
-          backgroundColor: Colors.grey[900],
-          title: const Row(
-            children: [
-              Icon(Icons.emoji_events, color: Colors.amber, size: 32),
-              SizedBox(width: 8),
-              Text('Plan Completed!', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-            ],
-          ),
-          content: const Text(
-            'Incredible work! You just broke your record and completed your active training plan. Are you ready to level up and generate a new plan?',
-            style: TextStyle(color: Colors.white70),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Not right now', style: TextStyle(color: Colors.grey)),
+        builder: (context) => Dialog(
+          backgroundColor: Colors.transparent,
+          child: NeoBrutalistContainer(
+            backgroundColor: AppTheme.surfaceColor,
+            shadowColor: Colors.amber,
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    const Icon(Icons.emoji_events, color: Colors.amber, size: 32),
+                    const SizedBox(width: 8),
+                    Expanded(child: Text('PLAN COMPLETED!', style: Theme.of(context).textTheme.headlineLarge?.copyWith(fontSize: 18))),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                const Text(
+                  'Incredible work! You just broke your record and completed your active training plan. Are you ready to level up and generate a new plan?',
+                  style: TextStyle(color: AppTheme.secondaryTextColor, fontFamily: 'Geist'),
+                ),
+                const SizedBox(height: 24),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    TextButton(
+                      onPressed: () => Navigator.pop(context),
+                      child: const Text('NOT RIGHT NOW', style: TextStyle(color: AppTheme.secondaryTextColor, fontFamily: 'Unbounded', fontWeight: FontWeight.bold)),
+                    ),
+                    const SizedBox(width: 16),
+                    NeoBrutalistButton(
+                      onPressed: () {
+                        Navigator.pop(context);
+                        context.go('/training');
+                      },
+                      backgroundColor: AppTheme.primaryColor,
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                      child: const Text('LEVEL UP!'),
+                    ),
+                  ],
+                ),
+              ],
             ),
-            ElevatedButton(
-              onPressed: () {
-                Navigator.pop(context);
-                context.go('/training');
-              },
-              style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFFC4C02)),
-              child: const Text('Level Up!'),
-            ),
-          ],
+          ),
         ),
       );
     }
@@ -180,9 +223,9 @@ class _PostRunAnalyticsScreenState extends State<PostRunAnalyticsScreen> {
     // Note: To use Mapbox, a public token must be set via MapboxOptions in main.dart or Info.plist / AndroidManifest
     // For this prototype, we assume the token is configured at the platform level.
     return Scaffold(
-      backgroundColor: const Color(0xFF121212),
+      backgroundColor: AppTheme.backgroundColor,
       appBar: AppBar(
-        title: const Text('Post-Run Analytics', style: TextStyle(fontFamily: 'Outfit', fontWeight: FontWeight.bold)),
+        title: Text('POST-RUN ANALYTICS', style: Theme.of(context).textTheme.headlineLarge?.copyWith(fontSize: 18)),
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
@@ -190,101 +233,140 @@ class _PostRunAnalyticsScreenState extends State<PostRunAnalyticsScreen> {
           onPressed: () => context.go('/dashboard'),
         ),
       ),
-      body: Column(
-        children: [
-          Expanded(
-            flex: 2,
-            child: kIsWeb
-                ? Container(
-                    color: Colors.grey[900],
-                    child: const Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(Icons.map, size: 64, color: Colors.grey),
-                          SizedBox(height: 16),
-                          Text(
-                            "Mapbox Heatmap\n(Available on iOS/Android device)",
-                            textAlign: TextAlign.center,
-                            style: TextStyle(color: Colors.grey, fontSize: 16),
-                          ),
-                        ],
-                      ),
-                    ),
-                  )
-                : MapWidget(
-                    key: const ValueKey("mapboxWidget"),
-                    onMapCreated: _onMapCreated,
-                    styleUri: MapboxStyles.DARK,
-                    cameraOptions: CameraOptions(
-                      center: Point(coordinates: Position(-122.4194, 37.7749)),
-                      zoom: 12.0,
-                    ),
+      body: ResponsiveLayout(
+        mobile: _buildMobileContent(),
+        desktop: _buildDesktopContent(),
+      ),
+    );
+  }
+
+  Widget _buildMobileContent() {
+    return Column(
+      children: [
+        Expanded(flex: 2, child: _buildMapArea()),
+        Expanded(flex: 1, child: _buildAnalyticsArea()),
+      ],
+    );
+  }
+
+  Widget _buildDesktopContent() {
+    return Row(
+      children: [
+        Expanded(flex: 2, child: _buildMapArea()),
+        Expanded(flex: 1, child: _buildAnalyticsArea()),
+      ],
+    );
+  }
+
+  Widget _buildMapArea() {
+    return kIsWeb
+        ? Container(
+            color: AppTheme.backgroundColor,
+            child: Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.map, size: 64, color: Colors.grey[800]),
+                  const SizedBox(height: 16),
+                  const Text(
+                    "MAPBOX HEATMAP\n(Available on iOS/Android device)",
+                    textAlign: TextAlign.center,
+                    style: TextStyle(color: AppTheme.secondaryTextColor, fontSize: 14, fontFamily: 'Unbounded', fontWeight: FontWeight.bold),
                   ),
-          ),
-          Expanded(
-            flex: 1,
-            child: Container(
+                ],
+              ),
+            ),
+          )
+        : MapWidget(
+            key: const ValueKey("mapboxWidget"),
+            onMapCreated: _onMapCreated,
+            styleUri: MapboxStyles.DARK,
+            cameraOptions: CameraOptions(
+              center: Point(coordinates: Position(-122.4194, 37.7749)),
+              zoom: 12.0,
+            ),
+          );
+  }
+
+  Widget _buildAnalyticsArea() {
+    return Container(
               padding: const EdgeInsets.all(20),
               child: SingleChildScrollView(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text("Fatigue Heatmap", style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.white)),
+                    Text("FATIGUE HEATMAP", style: Theme.of(context).textTheme.headlineLarge?.copyWith(fontSize: 20)),
                     const SizedBox(height: 10),
-                    Text("Red dots indicate where your cadence dropped and form degraded.", style: TextStyle(color: Colors.grey[400], fontSize: 16)),
-                    const SizedBox(height: 20),
-                    const Text("AI Recovery Coach", style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.white)),
-                    const SizedBox(height: 10),
+                    const Text("Red dots indicate where your cadence dropped and form degraded.", style: TextStyle(color: AppTheme.secondaryTextColor, fontSize: 14, fontFamily: 'Geist')),
+                    const SizedBox(height: 24),
+                    Row(
+                      children: [
+                        Text("AI RECOVERY COACH", style: Theme.of(context).textTheme.headlineLarge?.copyWith(fontSize: 20)),
+                        const SizedBox(width: 8),
+                        ref.watch(userProfileProvider).when(
+                          data: (profile) => profile.subscriptionTier == 'premium' 
+                            ? const Icon(Icons.auto_awesome, color: AppTheme.primaryColor)
+                            : const Icon(Icons.lock, color: Colors.grey, size: 20),
+                          loading: () => const SizedBox(),
+                          error: (_, __) => const SizedBox(),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
                     SingleChildScrollView(
                       scrollDirection: Axis.horizontal,
                       child: Row(
                         children: ['Standard', 'Vegan', 'Keto', 'High-Protein'].map((diet) {
+                          final isSelected = selectedDiet == diet;
                           return Padding(
                             padding: const EdgeInsets.only(right: 8.0),
-                            child: ChoiceChip(
-                              label: Text(diet),
-                              selected: selectedDiet == diet,
-                              onSelected: (bool selected) {
-                                if (selected) {
-                                  setState(() {
-                                    selectedDiet = diet;
-                                    _nutritionPlanFuture = _fetchNutritionPlan(diet);
-                                  });
-                                }
+                            child: GestureDetector(
+                              onTap: () {
+                                setState(() {
+                                  selectedDiet = diet;
+                                  _nutritionPlanFuture = _fetchNutritionPlan(diet);
+                                });
                               },
-                              selectedColor: Colors.blueAccent.withOpacity(0.3),
-                              backgroundColor: Colors.grey[900],
-                              labelStyle: TextStyle(color: selectedDiet == diet ? Colors.blueAccent : Colors.grey),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(20),
-                                side: BorderSide(color: selectedDiet == diet ? Colors.blueAccent : Colors.grey[800]!),
+                              child: NeoBrutalistContainer(
+                                backgroundColor: isSelected ? AppTheme.accentColor : AppTheme.surfaceColor,
+                                shadowColor: Colors.black,
+                                shadowOffset: isSelected ? 1 : 2,
+                                borderWidth: 1.5,
+                                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                                child: Text(
+                                  diet.toUpperCase(),
+                                  style: TextStyle(
+                                    color: isSelected ? Colors.black : Colors.white,
+                                    fontFamily: 'Unbounded',
+                                    fontWeight: FontWeight.w900,
+                                    fontSize: 10,
+                                  ),
+                                ),
                               ),
                             ),
                           );
                         }).toList(),
                       ),
                     ),
-                    const SizedBox(height: 15),
-                    Container(
-                      padding: const EdgeInsets.all(15),
-                      decoration: BoxDecoration(
-                        color: Colors.grey[900],
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: Colors.blueAccent.withOpacity(0.3))
-                      ),
+                    const SizedBox(height: 20),
+                    NeoBrutalistContainer(
+                      backgroundColor: AppTheme.surfaceColor,
+                      shadowColor: AppTheme.primaryColor,
+                      borderWidth: 2,
+                      shadowOffset: 4,
+                      padding: const EdgeInsets.all(16),
                       child: FutureBuilder<String>(
                         future: _nutritionPlanFuture,
                         builder: (context, snapshot) {
                           if (snapshot.connectionState == ConnectionState.waiting) {
-                            return const Center(child: Padding(padding: EdgeInsets.all(20), child: CircularProgressIndicator()));
+                            return const Center(child: Padding(padding: EdgeInsets.all(20), child: CircularProgressIndicator(color: AppTheme.primaryColor)));
                           }
                           if (snapshot.hasError) {
-                            return Text("Error: ${snapshot.error}", style: const TextStyle(color: Colors.red));
+                            return Text("Error: ${snapshot.error}", style: const TextStyle(color: Colors.redAccent, fontFamily: 'Geist'));
                           }
                           return Text(
                             snapshot.data ?? "Failed to load nutrition plan",
-                            style: const TextStyle(color: Colors.white, fontSize: 15, height: 1.5),
+                            style: const TextStyle(color: Colors.white, fontSize: 14, height: 1.5, fontFamily: 'Geist'),
                           );
                         }
                       ),
@@ -293,9 +375,7 @@ class _PostRunAnalyticsScreenState extends State<PostRunAnalyticsScreen> {
                 ),
               ),
             ),
-          )
-        ],
-      ),
-    );
+            ),
+          );
   }
 }

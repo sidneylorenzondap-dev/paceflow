@@ -68,8 +68,35 @@ router.get('/plan', requireAuth, async (req, res) => {
       });
     }
 
+    if (req.user.subscriptionTier === 'free') {
+      const targetStr = targetDistance === 5000 ? '5K' : targetDistance === 10000 ? '10K' : targetDistance === 21097 ? 'Half Marathon' : 'Marathon';
+      const staticPlan = await prisma.paceflowStaticPlan.findFirst({
+        where: { distance: targetStr }
+      });
+      
+      if (!staticPlan) {
+        return res.status(500).json({ error: 'No static plan available for this distance.' });
+      }
+
+      await prisma.$transaction([
+        prisma.paceflowTrainingPlan.create({
+          data: {
+            userId: req.user.id,
+            goal: goal,
+            planData: staticPlan.planData as any
+          }
+        }),
+        prisma.paceflowUser.update({
+          where: { id: req.user.id },
+          data: { activePlan: staticPlan.planData as any, activePlanGoal: goal }
+        })
+      ]);
+
+      return res.json({ plan: staticPlan.planData, creditsRemaining: req.user.aiCredits, isCached: true, isStatic: true });
+    }
+
     if (req.user.aiCredits <= 0) {
-      return res.status(402).json({ error: 'Out of AI credits for this month.' });
+      return res.status(402).json({ error: 'Out of AI credits for this month. Upgrade to Premium for unlimited AI plans.' });
     }
 
     // Deduct credit

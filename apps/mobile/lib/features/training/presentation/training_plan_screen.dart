@@ -4,6 +4,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../data/training_service.dart';
 import '../domain/training_workout.dart';
 import '../data/saved_plan_service.dart';
+import '../../../core/theme/app_theme.dart';
+import '../../../core/ui/neo_brutalist_container.dart';
+import '../../../core/ui/neo_brutalist_button.dart';
+import '../../../core/ui/responsive_layout.dart';
 
 class TrainingPlanScreen extends ConsumerStatefulWidget {
   final String goal;
@@ -50,10 +54,17 @@ class _TrainingPlanScreenState extends ConsumerState<TrainingPlanScreen> {
 
   @override
   Widget build(BuildContext context) {
+    return ResponsiveLayout(
+      mobile: _buildMobileScaffold(context),
+      desktop: _buildDesktopScaffold(context),
+    );
+  }
+
+  Widget _buildMobileScaffold(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF121212),
+      backgroundColor: AppTheme.backgroundColor,
       appBar: AppBar(
-        title: const Text('AI Training Plan', style: TextStyle(fontFamily: 'Outfit', fontWeight: FontWeight.bold)),
+        title: Text('AI TRAINING PLAN', style: Theme.of(context).textTheme.headlineLarge?.copyWith(fontSize: 18)),
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
@@ -67,34 +78,73 @@ class _TrainingPlanScreenState extends ConsumerState<TrainingPlanScreen> {
           child: _buildContent(),
         ),
       ),
-      floatingActionButton: (_workouts != null && _workouts!.isNotEmpty)
-          ? Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                if (widget.planId != null) ...[
-                  FloatingActionButton.extended(
-                    heroTag: 'set_active',
-                    onPressed: _setActivePlan,
-                    backgroundColor: const Color(0xFF4A90E2),
-                    icon: const Icon(Icons.check_circle_outline),
-                    label: const Text('Set as Active', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white)),
-                  ),
-                  const SizedBox(height: 16),
-                ],
-                FloatingActionButton.extended(
-                  heroTag: 'adjust_plan',
-                  onPressed: () {
-                    context.push('/training/chat');
-                  },
-                  backgroundColor: const Color(0xFFFC4C02),
-                  icon: const Icon(Icons.chat_bubble_outline),
-                  label: const Text('Adjust Plan', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white)),
-                ),
-              ],
-            )
-          : null,
+      floatingActionButton: _buildFab(),
     );
+  }
+
+  Widget _buildDesktopScaffold(BuildContext context) {
+    return Scaffold(
+      backgroundColor: AppTheme.backgroundColor,
+      appBar: AppBar(
+        title: Text('AI TRAINING PLAN (DESKTOP)', style: Theme.of(context).textTheme.headlineLarge?.copyWith(fontSize: 18)),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => context.go('/dashboard'),
+        ),
+      ),
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 64.0, vertical: 32.0),
+          child: _buildDesktopContent(),
+        ),
+      ),
+      floatingActionButton: _buildFab(),
+    );
+  }
+
+  Widget? _buildFab() {
+    if (_workouts != null && _workouts!.isNotEmpty) {
+      return Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.end,
+        children: [
+          if (widget.planId != null) ...[
+            NeoBrutalistButton(
+              onPressed: _setActivePlan,
+              backgroundColor: AppTheme.primaryColor,
+              shadowColor: Colors.black,
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: const [
+                  Icon(Icons.check_circle_outline, color: Colors.black, size: 20),
+                  SizedBox(width: 8),
+                  Text('SET AS ACTIVE', style: TextStyle(color: Colors.black, fontWeight: FontWeight.w900)),
+                ],
+              ),
+            ),
+            const SizedBox(height: 16),
+          ],
+          NeoBrutalistButton(
+            onPressed: () => context.push('/training/chat'),
+            backgroundColor: AppTheme.accentColor,
+            shadowColor: Colors.black,
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: const [
+                Icon(Icons.chat_bubble_outline, color: Colors.black, size: 20),
+                SizedBox(width: 8),
+                Text('ADJUST PLAN', style: TextStyle(color: Colors.black, fontWeight: FontWeight.w900)),
+              ],
+            ),
+          ),
+        ],
+      );
+    }
+    return null;
   }
 
   void _setActivePlan() async {
@@ -123,69 +173,115 @@ class _TrainingPlanScreenState extends ConsumerState<TrainingPlanScreen> {
     }
   }
 
-  Widget _buildContent() {
-    if (_isLoading) {
-      return Center(
-        child: Container(
-          padding: const EdgeInsets.all(32),
-          decoration: BoxDecoration(
-            color: Colors.grey[900],
-            borderRadius: BorderRadius.circular(24),
-            border: Border.all(color: const Color(0xFFFC4C02).withOpacity(0.3)),
-            boxShadow: [
-              BoxShadow(
-                color: const Color(0xFFFC4C02).withOpacity(0.1),
-                blurRadius: 32,
-                spreadRadius: 8,
-              ),
-            ],
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Stack(
-                alignment: Alignment.center,
+  Widget _buildDesktopContent() {
+    if (_isLoading) return _buildLoadingState();
+    if (_errorMessage.isNotEmpty) return Center(child: Text(_errorMessage, style: const TextStyle(color: Colors.red)));
+    if (_requiresBaseline) return _buildBaselineState();
+    if (_workouts == null || _workouts!.isEmpty) return const Center(child: Text('No plan available.', style: TextStyle(color: Colors.grey)));
+
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        if (_adjustmentNotice != null && _adjustmentNotice!.isNotEmpty) ...[
+          Expanded(
+            flex: 1,
+            child: NeoBrutalistContainer(
+              backgroundColor: AppTheme.primaryColor,
+              shadowColor: Colors.black,
+              borderWidth: 2,
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
                 children: [
-                  const SizedBox(
-                    width: 80,
-                    height: 80,
-                    child: CircularProgressIndicator(
-                      color: Color(0xFFFC4C02),
-                      strokeWidth: 2,
-                    ),
+                  Row(
+                    children: [
+                      const Icon(Icons.psychology, color: Colors.black, size: 28),
+                      const SizedBox(width: 12),
+                      const Text('AI COACH NOTE', style: TextStyle(color: Colors.black, fontWeight: FontWeight.w900, fontSize: 16, fontFamily: 'Unbounded')),
+                    ],
                   ),
-                  Icon(
-                    Icons.auto_awesome,
-                    color: const Color(0xFFFC4C02).withOpacity(0.8),
-                    size: 32,
+                  const SizedBox(height: 16),
+                  Text(
+                    _adjustmentNotice!,
+                    style: const TextStyle(color: Colors.black87, fontSize: 14, height: 1.5, fontFamily: 'Geist', fontWeight: FontWeight.w600),
                   ),
                 ],
               ),
-              const SizedBox(height: 32),
-              const Text(
-                'Crafting Your Plan',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                  letterSpacing: 1,
-                ),
-              ),
-              const SizedBox(height: 12),
-              const Text(
-                'Analyzing your history and\ncalibrating AI targets...',
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  color: Colors.white60,
-                  fontSize: 14,
-                  height: 1.5,
-                ),
-              ),
-            ],
+            ),
+          ),
+          const SizedBox(width: 32),
+        ],
+        Expanded(
+          flex: _adjustmentNotice != null && _adjustmentNotice!.isNotEmpty ? 2 : 1,
+          child: SingleChildScrollView(
+            child: Wrap(
+              spacing: 16,
+              runSpacing: 16,
+              children: _workouts!.map((workout) => SizedBox(
+                width: 300,
+                child: _buildWorkoutCard(workout),
+              )).toList(),
+            ),
           ),
         ),
-      );
-    }
+      ],
+    );
+  }
+
+  Widget _buildLoadingState() {
+    return Center(
+      child: NeoBrutalistContainer(
+        backgroundColor: AppTheme.surfaceColor,
+        shadowColor: AppTheme.accentColor,
+        borderWidth: 3,
+        shadowOffset: 6,
+        padding: const EdgeInsets.all(32),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Stack(
+              alignment: Alignment.center,
+              children: [
+                const SizedBox(
+                  width: 80,
+                  height: 80,
+                  child: CircularProgressIndicator(
+                    color: AppTheme.primaryColor,
+                    strokeWidth: 4,
+                  ),
+                ),
+                Icon(
+                  Icons.auto_awesome,
+                  color: AppTheme.primaryColor,
+                  size: 32,
+                ),
+              ],
+            ),
+            const SizedBox(height: 32),
+            Text(
+              'CRAFTING PLAN',
+              style: Theme.of(context).textTheme.headlineLarge?.copyWith(fontSize: 18),
+            ),
+            const SizedBox(height: 12),
+            const Text(
+              'Analyzing history...\nCalibrating targets...',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                color: AppTheme.secondaryTextColor,
+                fontFamily: 'Geist',
+                fontSize: 14,
+                height: 1.5,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildContent() {
+    if (_isLoading) return _buildLoadingState();
 
     if (_errorMessage.isNotEmpty) {
       return Center(
@@ -204,33 +300,33 @@ class _TrainingPlanScreenState extends ConsumerState<TrainingPlanScreen> {
     return Column(
       children: [
         if (_adjustmentNotice != null && _adjustmentNotice!.isNotEmpty)
-          Container(
-            padding: const EdgeInsets.all(16),
-            margin: const EdgeInsets.only(bottom: 16),
-            decoration: BoxDecoration(
-              color: const Color(0xFFFC4C02).withOpacity(0.1),
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: const Color(0xFFFC4C02).withOpacity(0.5)),
-            ),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Icon(Icons.psychology, color: Color(0xFFFC4C02), size: 24),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text('AI Coach Note', style: TextStyle(color: Color(0xFFFC4C02), fontWeight: FontWeight.bold, fontSize: 16)),
-                      const SizedBox(height: 4),
-                      Text(
-                        _adjustmentNotice!,
-                        style: const TextStyle(color: Colors.white, fontSize: 14, height: 1.4),
-                      ),
-                    ],
+          Padding(
+            padding: const EdgeInsets.only(bottom: 16),
+            child: NeoBrutalistContainer(
+              backgroundColor: AppTheme.primaryColor,
+              shadowColor: Colors.black,
+              borderWidth: 2,
+              padding: const EdgeInsets.all(16),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Icon(Icons.psychology, color: Colors.black, size: 24),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text('AI COACH NOTE', style: TextStyle(color: Colors.black, fontWeight: FontWeight.w900, fontSize: 14, fontFamily: 'Unbounded')),
+                        const SizedBox(height: 4),
+                        Text(
+                          _adjustmentNotice!,
+                          style: const TextStyle(color: Colors.black87, fontSize: 13, height: 1.4, fontFamily: 'Geist', fontWeight: FontWeight.w600),
+                        ),
+                      ],
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         Expanded(
@@ -248,42 +344,42 @@ class _TrainingPlanScreenState extends ConsumerState<TrainingPlanScreen> {
 
   Widget _buildBaselineState() {
     return Center(
-      child: Container(
+      child: NeoBrutalistContainer(
+        backgroundColor: AppTheme.surfaceColor,
+        shadowColor: AppTheme.accentColor,
+        borderWidth: 3,
         padding: const EdgeInsets.all(24),
-        decoration: BoxDecoration(
-          color: Colors.grey[900],
-          borderRadius: BorderRadius.circular(24),
-          border: Border.all(color: const Color(0xFFFC4C02).withOpacity(0.5)),
-        ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            const Icon(Icons.directions_run, color: Color(0xFFFC4C02), size: 64),
+            const Icon(Icons.directions_run, color: AppTheme.accentColor, size: 64),
             const SizedBox(height: 16),
-            const Text(
-              'Baseline Test Required',
-              style: TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold),
+            Text(
+              'BASELINE TEST REQUIRED',
+              style: Theme.of(context).textTheme.headlineLarge?.copyWith(fontSize: 18),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 12),
             Text(
               'We need to understand your current fitness level before generating a plan for ${widget.goal}.',
-              style: const TextStyle(color: Colors.white70, fontSize: 16),
+              style: const TextStyle(color: AppTheme.secondaryTextColor, fontSize: 14, fontFamily: 'Geist'),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 16),
-            Container(
+            NeoBrutalistContainer(
+              backgroundColor: AppTheme.backgroundColor,
+              shadowColor: Colors.transparent,
+              borderWidth: 2,
               padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(color: Colors.black45, borderRadius: BorderRadius.circular(12)),
               child: Text(
                 _baselineInstruction,
-                style: const TextStyle(color: Colors.white, fontStyle: FontStyle.italic),
+                style: const TextStyle(color: Colors.white, fontStyle: FontStyle.italic, fontFamily: 'Geist'),
                 textAlign: TextAlign.center,
               ),
             ),
             const SizedBox(height: 24),
-            ElevatedButton(
+            NeoBrutalistButton(
               onPressed: () {
                 context.push('/run', extra: {
                   'targetDistance': 'Open',
@@ -294,12 +390,8 @@ class _TrainingPlanScreenState extends ConsumerState<TrainingPlanScreen> {
                   'pendingPlanGoal': widget.goal
                 });
               },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFFFC4C02),
-                padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
-              ),
-              child: const Text('Start Baseline Run', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+              backgroundColor: AppTheme.accentColor,
+              child: const Text('START BASELINE RUN'),
             ),
           ],
         ),
@@ -332,49 +424,50 @@ class _TrainingPlanScreenState extends ConsumerState<TrainingPlanScreen> {
         typeIcon = Icons.fitness_center;
     }
 
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.grey[900],
-        borderRadius: BorderRadius.circular(16),
-        border: Border(left: BorderSide(color: typeColor, width: 4)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Text(
-                workout.day,
-                style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
-              ),
-              const Spacer(),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  color: typeColor.withOpacity(0.2),
-                  borderRadius: BorderRadius.circular(8),
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: NeoBrutalistContainer(
+        backgroundColor: AppTheme.surfaceColor,
+        shadowColor: typeColor,
+        borderWidth: 2,
+        shadowOffset: 3,
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Text(
+                  workout.day.toUpperCase(),
+                  style: Theme.of(context).textTheme.headlineLarge?.copyWith(fontSize: 16),
                 ),
-                child: Row(
-                  children: [
-                    Icon(typeIcon, color: typeColor, size: 14),
-                    const SizedBox(width: 4),
-                    Text(
-                      workout.type,
-                      style: TextStyle(color: typeColor, fontSize: 12, fontWeight: FontWeight.bold),
-                    ),
-                  ],
+                const Spacer(),
+                NeoBrutalistContainer(
+                  backgroundColor: typeColor,
+                  shadowColor: Colors.black,
+                  shadowOffset: 2,
+                  borderWidth: 1.5,
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  child: Row(
+                    children: [
+                      Icon(typeIcon, color: Colors.black, size: 12),
+                      const SizedBox(width: 4),
+                      Text(
+                        workout.type.toUpperCase(),
+                        style: const TextStyle(color: Colors.black, fontSize: 11, fontWeight: FontWeight.w900, fontFamily: 'Unbounded'),
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          Text(
-            workout.description,
-            style: const TextStyle(color: Colors.white70, fontSize: 14),
-          ),
-        ],
+              ],
+            ),
+            const SizedBox(height: 8),
+            Text(
+              workout.description,
+              style: const TextStyle(color: AppTheme.secondaryTextColor, fontSize: 14, fontFamily: 'Geist'),
+            ),
+          ],
+        ),
       ),
     );
   }

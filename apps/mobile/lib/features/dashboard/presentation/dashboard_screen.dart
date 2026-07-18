@@ -8,10 +8,12 @@ import '../../run/presentation/device_scanner_screen.dart';
 import '../../run/data/ble_service.dart';
 import '../../activities/presentation/activities_screen.dart';
 import '../../activities/data/activity_service.dart';
-import '../../training/presentation/saved_plans_screen.dart';
 import '../../training/data/saved_plan_service.dart';
 import '../../user/data/user_service.dart';
-
+import '../../../core/theme/app_theme.dart';
+import '../../../core/ui/neo_brutalist_container.dart';
+import '../../../core/ui/neo_brutalist_button.dart';
+import '../../../core/ui/responsive_layout.dart';
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
 
@@ -127,14 +129,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
               const PopupMenuItem(
                 value: 'profile',
                 child: Row(
-                  children: [
-                    Icon(Icons.person, size: 20, color: Colors.white),
-                    SizedBox(width: 8),
-                    Text('Profile Settings', style: TextStyle(color: Colors.white)),
-                  ],
-                ),
-              ),
-              const PopupMenuItem(
                 value: 'preferences',
                 child: Row(
                   children: [
@@ -169,188 +163,440 @@ class _DashboardScreenState extends State<DashboardScreen> {
           ],
         ),
       ),
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _currentIndex,
-        onTap: (index) {
-          setState(() {
-            _currentIndex = index;
-          });
-        },
-        backgroundColor: Theme.of(context).colorScheme.surface,
-        selectedItemColor: const Color(0xFFFC4C02), // Strava Orange/Paceflow Primary
-        unselectedItemColor: Colors.grey,
-        items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.home_filled),
-            label: 'Home',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.history),
-            label: 'Activities',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.event_note),
-            label: 'Plans',
+      bottomNavigationBar: Container(
+        color: AppTheme.backgroundColor,
+        padding: const EdgeInsets.only(left: 16, right: 16, bottom: 24, top: 12),
+        decoration: BoxDecoration(
+          border: const Border(top: BorderSide(color: AppTheme.primaryColor, width: 2)),
+          color: AppTheme.backgroundColor,
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceAround,
+          children: [
+            _buildNavItem(Icons.home_filled, 'HOME', 0),
+            _buildNavItem(Icons.history, 'ACTIVITIES', 1),
+            _buildNavItem(Icons.event_note, 'PLANS', 2),
+          ],
+        ),
+      ),
+      ),
+    );
+  }
+
+  Widget _buildDesktopScaffold(BuildContext context) {
+    return Scaffold(
+      backgroundColor: AppTheme.backgroundColor,
+      body: Row(
+        children: [
+          _buildDesktopSidebar(),
+          Expanded(
+            child: Scaffold(
+              backgroundColor: Colors.transparent,
+              appBar: AppBar(
+                title: const Text('PACEFLOW', style: TextStyle(fontFamily: 'Unbounded', fontWeight: FontWeight.w900)),
+                backgroundColor: Colors.transparent,
+                elevation: 0,
+                actions: [
+                  PopupMenuButton<String>(
+                    icon: const Icon(Icons.person_outline),
+                    color: AppTheme.surfaceColor,
+                    onSelected: (value) async {
+                      if (value == 'logout') {
+                        await Supabase.instance.client.auth.signOut();
+                        if (mounted) context.go('/login');
+                      } else if (value == 'preferences') {
+                        context.push('/onboarding');
+                      }
+                    },
+                    itemBuilder: (context) => [
+                      const PopupMenuItem(
+                        value: 'preferences',
+                        child: Row(
+                          children: [
+                            Icon(Icons.settings, size: 20, color: Colors.white),
+                            SizedBox(width: 8),
+                            Text('Preferences', style: TextStyle(color: Colors.white)),
+                          ],
+                        ),
+                      ),
+                      const PopupMenuDivider(height: 1),
+                      const PopupMenuItem(
+                        value: 'logout',
+                        child: Row(
+                          children: [
+                            Icon(Icons.logout, size: 20, color: Colors.redAccent),
+                            SizedBox(width: 8),
+                            Text('Logout', style: TextStyle(color: Colors.redAccent, fontWeight: FontWeight.bold)),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+              body: IndexedStack(
+                index: _currentIndex,
+                children: [
+                  _buildHomeDesktopView(),
+                  const ActivitiesScreen(),
+                  const SavedPlansScreen(),
+                ],
+              ),
+            ),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildHomeView() {
-    return Padding(
-      padding: const EdgeInsets.all(24.0),
+  Widget _buildDesktopSidebar() {
+    return Container(
+      width: 250,
+      color: AppTheme.backgroundColor,
+      padding: const EdgeInsets.symmetric(vertical: 32, horizontal: 16),
+      decoration: const BoxDecoration(
+        border: Border(right: BorderSide(color: AppTheme.primaryColor, width: 2)),
+      ),
       child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              const Text(
-                'Ready to crush your goals?',
-                style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 32),
-              
-              // Recent Activity Card (Mock)
-              Container(
-                padding: const EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.surface,
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(
-                    color: Theme.of(context).colorScheme.surfaceVariant,
-                  )
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      'NEXT GOAL',
-                      style: TextStyle(
-                        color: Colors.grey,
-                        letterSpacing: 1.5,
-                        fontSize: 12,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    const Text(
-                      'Sub-20 5K Time Trial',
-                      style: TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    LinearProgressIndicator(
-                      value: 0.7,
-                      backgroundColor: Colors.grey[800],
-                      valueColor: AlwaysStoppedAnimation<Color>(
-                        Theme.of(context).colorScheme.primary,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 16),
-              
-              // Personal Records
-              const Text(
-                'Personal Records',
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 16),
-              const PersonalRecordsWidget(),
-              const SizedBox(height: 32),
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          const Text(
+            'MENU',
+            style: TextStyle(
+              color: AppTheme.secondaryTextColor,
+              fontFamily: 'Unbounded',
+              fontWeight: FontWeight.w900,
+              fontSize: 12,
+              letterSpacing: 2,
+            ),
+          ),
+          const SizedBox(height: 24),
+          _buildSidebarItem(Icons.home_filled, 'HOME', 0),
+          const SizedBox(height: 16),
+          _buildSidebarItem(Icons.history, 'ACTIVITIES', 1),
+          const SizedBox(height: 16),
+          _buildSidebarItem(Icons.event_note, 'PLANS', 2),
+        ],
+      ),
+    );
+  }
 
-              SizedBox(
-                width: double.infinity,
-                height: 56,
-                child: ElevatedButton.icon(
-                  onPressed: _isLoadingStrava ? null : _importFromStrava,
-                  icon: _isLoadingStrava 
-                    ? const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-                    : const Icon(Icons.sync, color: Colors.white),
-                  label: Text(
-                    _isLoadingStrava ? 'IMPORTING...' : 'IMPORT FROM STRAVA',
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                      letterSpacing: 1.2,
-                      color: Colors.white,
-                    ),
-                  ),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFFFC4C02), // Strava Orange
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                  ),
-                ),
+  Widget _buildSidebarItem(IconData icon, String label, int index) {
+    final isSelected = _currentIndex == index;
+    return GestureDetector(
+      onTap: () {
+        setState(() {
+          _currentIndex = index;
+        });
+      },
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        decoration: BoxDecoration(
+          color: isSelected ? AppTheme.primaryColor : Colors.transparent,
+          border: isSelected ? Border.all(color: Colors.black, width: 2) : Border.all(color: Colors.transparent, width: 2),
+          boxShadow: isSelected 
+              ? [const BoxShadow(color: Colors.black, offset: Offset(3, 3))]
+              : null,
+        ),
+        child: Row(
+          children: [
+            Icon(icon, color: isSelected ? Colors.black : AppTheme.secondaryTextColor),
+            const SizedBox(width: 12),
+            Text(
+              label,
+              style: TextStyle(
+                color: isSelected ? Colors.black : AppTheme.secondaryTextColor,
+                fontFamily: 'Unbounded',
+                fontWeight: FontWeight.w900,
+                fontSize: 14,
               ),
-              const SizedBox(height: 16),
-              SizedBox(
-                width: double.infinity,
-                height: 56,
-                child: ElevatedButton(
-                  onPressed: _showGoalBottomSheet,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF4A90E2), // Nice Blue
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const Icon(Icons.calendar_month, color: Colors.white),
-                      const SizedBox(width: 8),
-                      const Text(
-                        'AI TRAINING PLAN',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                          letterSpacing: 1.2,
-                          color: Colors.white,
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      Consumer(
-                        builder: (context, ref, child) {
-                          final profileAsync = ref.watch(userProfileProvider);
-                          return profileAsync.when(
-                            data: (profile) {
-                              return Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                                decoration: BoxDecoration(
-                                  color: profile.aiCredits > 0 ? Colors.white.withOpacity(0.2) : Colors.red.withOpacity(0.8),
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                                child: Text(
-                                  '${profile.aiCredits}',
-                                  style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.white),
-                                ),
-                              );
-                            },
-                            loading: () => const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white)),
-                            error: (_, __) => const SizedBox.shrink(),
-                          );
-                        },
-                      ),
-                    ],
-                  ),
-                ),
-              ),const SizedBox(height: 16),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 
-              ElevatedButton.icon(
-                onPressed: _showPreRunSetupBottomSheet,
-                icon: const Icon(Icons.play_arrow_rounded),
-                label: const Text('START RUN'),
-                style: ElevatedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: 20),
+  Widget _buildNavItem(IconData icon, String label, int index) {
+    final isSelected = _currentIndex == index;
+    return GestureDetector(
+      onTap: () {
+        setState(() {
+          _currentIndex = index;
+        });
+      },
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        decoration: BoxDecoration(
+          color: isSelected ? AppTheme.primaryColor : Colors.transparent,
+          border: isSelected ? Border.all(color: Colors.black, width: 2) : Border.all(color: Colors.transparent, width: 2),
+          boxShadow: isSelected 
+              ? [const BoxShadow(color: Colors.black, offset: Offset(2, 2))]
+              : null,
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, color: isSelected ? Colors.black : AppTheme.secondaryTextColor),
+            if (isSelected) ...[
+              const SizedBox(width: 8),
+              Text(
+                label,
+                style: const TextStyle(
+                  color: Colors.black,
+                  fontFamily: 'Unbounded',
+                  fontWeight: FontWeight.w900,
+                  fontSize: 12,
                 ),
               ),
             ],
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildHomeView() {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(20.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          _buildWelcomeHeader(),
+          const SizedBox(height: 32),
+          _buildPrSection(),
+          const SizedBox(height: 32),
+          _buildActiveGoalSection(),
+          const SizedBox(height: 32),
+          _buildActionsSection(),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildHomeDesktopView() {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(40.0),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Expanded(
+            flex: 3,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                _buildWelcomeHeader(),
+                const SizedBox(height: 40),
+                _buildActiveGoalSection(),
+                const SizedBox(height: 40),
+                _buildPrSection(),
+              ],
+            ),
           ),
+          const SizedBox(width: 40),
+          Expanded(
+            flex: 2,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                _buildActionsSection(),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildWelcomeHeader() {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'WELCOME BACK,',
+              style: TextStyle(
+                fontFamily: 'Geist',
+                fontWeight: FontWeight.w600,
+                fontSize: 14,
+                color: AppTheme.secondaryTextColor,
+              ),
+            ),
+            Text(
+              'RUNNER',
+              style: Theme.of(context).textTheme.displayLarge?.copyWith(fontSize: 22),
+            ),
+          ],
+        ),
+        NeoBrutalistContainer(
+          backgroundColor: AppTheme.primaryColor,
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+          borderWidth: 2,
+          borderRadius: 4,
+          shadowOffset: 2,
+          child: Row(
+            children: [
+              const Icon(Icons.star, size: 14, color: Colors.black),
+              const SizedBox(width: 4),
+              Text(
+                'PREMIUM',
+                style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                      color: Colors.black,
+                      fontSize: 11,
+                    ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildPrSection() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Text(
+              'PERSONAL BESTS',
+              style: Theme.of(context).textTheme.headlineLarge?.copyWith(fontSize: 14),
+            ),
+            const SizedBox(width: 8),
+            const Icon(Icons.emoji_events, color: Colors.white, size: 18),
+          ],
+        ),
+        const SizedBox(height: 12),
+        const PersonalRecordsWidget(),
+      ],
+    );
+  }
+
+  Widget _buildActiveGoalSection() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'ACTIVE GOAL',
+          style: Theme.of(context).textTheme.headlineLarge?.copyWith(fontSize: 14),
+        ),
+        const SizedBox(height: 12),
+        NeoBrutalistContainer(
+          backgroundColor: AppTheme.surfaceColor,
+          shadowColor: AppTheme.primaryColor,
+          borderWidth: 3,
+          shadowOffset: 4,
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'SUB-45:00 10K',
+                    style: Theme.of(context).textTheme.displayLarge?.copyWith(fontSize: 18),
+                  ),
+                  NeoBrutalistContainer(
+                    backgroundColor: AppTheme.accentColor,
+                    borderWidth: 2,
+                    shadowOffset: 2,
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    child: Text(
+                      'AI',
+                      style: Theme.of(context).textTheme.titleLarge?.copyWith(fontSize: 12, color: Colors.black),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              LinearProgressIndicator(
+                value: 0.7,
+                minHeight: 12,
+                backgroundColor: Colors.black,
+                valueColor: const AlwaysStoppedAnimation<Color>(AppTheme.primaryColor),
+                borderRadius: BorderRadius.circular(4),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildActionsSection() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        NeoBrutalistButton(
+          onPressed: _isLoadingStrava ? () {} : _importFromStrava,
+          backgroundColor: Colors.white,
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              if (_isLoadingStrava)
+                const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.black, strokeWidth: 3))
+              else
+                const Icon(Icons.sync, color: Colors.black),
+              const SizedBox(width: 8),
+              Text(
+                _isLoadingStrava ? 'IMPORTING...' : 'IMPORT STRAVA',
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 16),
+        NeoBrutalistButton(
+          onPressed: _showGoalBottomSheet,
+          backgroundColor: AppTheme.primaryColor,
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(Icons.auto_awesome, color: Colors.black),
+              const SizedBox(width: 8),
+              const Text('AI TRAINING PLAN'),
+              const SizedBox(width: 8),
+              Consumer(
+                builder: (context, ref, child) {
+                  final profileAsync = ref.watch(userProfileProvider);
+                  return profileAsync.when(
+                    data: (profile) => NeoBrutalistContainer(
+                      backgroundColor: Colors.white,
+                      borderWidth: 2,
+                      shadowOffset: 0,
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                      child: Text(
+                        '${profile.aiCredits}',
+                        style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w900, color: Colors.black),
+                      ),
+                    ),
+                    loading: () => const SizedBox.shrink(),
+                    error: (_, __) => const SizedBox.shrink(),
+                  );
+                },
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 16),
+        NeoBrutalistButton(
+          onPressed: _showPreRunSetupBottomSheet,
+          backgroundColor: AppTheme.accentColor,
+          child: const Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(Icons.play_arrow_rounded, color: Colors.black, size: 28),
+              SizedBox(width: 8),
+              Text('START RUN'),
+            ],
+          ),
+        ),
+      ],
     );
   }
 }
@@ -364,7 +610,7 @@ class PersonalRecordsWidget extends ConsumerWidget {
 
     return historyAsync.when(
       loading: () => const Center(child: CircularProgressIndicator()),
-      error: (e, st) => Center(child: Text('Error loading records', style: TextStyle(color: Colors.grey))),
+      error: (e, st) => const Center(child: Text('Error loading records', style: TextStyle(color: Colors.grey))),
       data: (history) {
         if (history.isEmpty) {
           return const Center(child: Text('No runs yet. Start running to set records!', style: TextStyle(color: Colors.grey)));
@@ -395,41 +641,48 @@ class PersonalRecordsWidget extends ConsumerWidget {
           if (pace == null) return '--:--';
           final minutes = pace.floor();
           final seconds = ((pace - minutes) * 60).round();
-          return '$minutes:${seconds.toString().padLeft(2, '0')} /km';
+          return '$minutes:${seconds.toString().padLeft(2, '0')}';
         }
 
-        Widget buildRecordCard(String title, double? pace, IconData icon) {
+        Widget buildRecordCard(String title, double? pace) {
           final hasRecord = pace != null;
-          return Container(
-            width: 140,
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: hasRecord ? const Color(0xFF1E1E1E) : Colors.transparent,
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(
-                color: hasRecord ? const Color(0xFFFC4C02).withOpacity(0.5) : Colors.white10,
-              ),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Icon(icon, size: 20, color: hasRecord ? const Color(0xFFFC4C02) : Colors.grey),
-                    const SizedBox(width: 8),
-                    Text(title, style: TextStyle(color: hasRecord ? Colors.white : Colors.grey, fontWeight: FontWeight.bold)),
-                  ],
-                ),
-                const SizedBox(height: 12),
-                Text(
-                  formatPace(pace),
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: hasRecord ? Colors.white : Colors.grey[700],
+          return Padding(
+            padding: const EdgeInsets.only(right: 12.0),
+            child: NeoBrutalistContainer(
+              backgroundColor: AppTheme.surfaceColor,
+              shadowColor: Colors.black,
+              borderWidth: 2,
+              borderRadius: 8,
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                          fontSize: 16,
+                          color: hasRecord ? AppTheme.primaryColor : Colors.grey[700],
+                        ),
                   ),
-                ),
-              ],
+                  const SizedBox(height: 8),
+                  Text(
+                    formatPace(pace),
+                    style: Theme.of(context).textTheme.displayLarge?.copyWith(
+                          fontSize: 15,
+                          color: hasRecord ? Colors.white : Colors.grey[800],
+                        ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    hasRecord ? 'Recent' : 'No Data',
+                    style: TextStyle(
+                      fontFamily: 'Geist',
+                      fontSize: 11,
+                      color: hasRecord ? AppTheme.secondaryTextColor : Colors.grey[800],
+                    ),
+                  ),
+                ],
+              ),
             ),
           );
         }
@@ -438,13 +691,10 @@ class PersonalRecordsWidget extends ConsumerWidget {
           scrollDirection: Axis.horizontal,
           child: Row(
             children: [
-              buildRecordCard('5K', pb5k, Icons.flash_on),
-              const SizedBox(width: 12),
-              buildRecordCard('10K', pb10k, Icons.directions_run),
-              const SizedBox(width: 12),
-              buildRecordCard('Half', pbHalf, Icons.workspace_premium),
-              const SizedBox(width: 12),
-              buildRecordCard('Full', pbFull, Icons.emoji_events),
+              buildRecordCard('5K', pb5k),
+              buildRecordCard('10K', pb10k),
+              buildRecordCard('Half', pbHalf),
+              buildRecordCard('Full', pbFull),
             ],
           ),
         );
@@ -696,33 +946,59 @@ class _GoalSelectionBottomSheetState extends ConsumerState<GoalSelectionBottomSh
           userProfileAsync.when(
             data: (profile) => ElevatedButton(
               onPressed: () {
-                if (profile.aiCredits <= 0) {
-                  Navigator.pop(context); // Close bottom sheet
+                if (profile.subscriptionTier == 'free') {
+                  Navigator.pop(context);
+                  context.push('/training', extra: 'Distance: $_selectedDistance, Target Pace: $_formattedPace');
+                  ref.refresh(userProfileProvider.future);
+                } else if (profile.aiCredits <= 0) {
+                  Navigator.pop(context);
                   _showPremiumPaywall(context);
                 } else {
                   Navigator.pop(context);
                   context.push('/training', extra: 'Distance: $_selectedDistance, Target Pace: $_formattedPace');
-                  // Refresh user profile after generating plan
                   ref.refresh(userProfileProvider.future);
                 }
               },
               style: ElevatedButton.styleFrom(
-                backgroundColor: profile.aiCredits > 0 ? const Color(0xFF4A90E2) : Colors.red[800],
+                backgroundColor: (profile.subscriptionTier == 'free' || profile.aiCredits > 0) ? const Color(0xFF4A90E2) : Colors.red[800],
                 padding: const EdgeInsets.symmetric(vertical: 16),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(16),
                 ),
               ),
-              child: Text(
-                profile.aiCredits > 0 ? 'GENERATE AI PLAN' : 'OUT OF CREDITS',
-                style: const TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                  letterSpacing: 1.2,
-                  color: Colors.white,
-                ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  if (profile.subscriptionTier == 'premium')
+                    const Icon(Icons.auto_awesome, color: Colors.white, size: 20),
+                  if (profile.subscriptionTier == 'premium')
+                    const SizedBox(width: 8),
+                  Text(
+                    profile.subscriptionTier == 'free' ? 'GENERATE PLAN (STATIC)' : (profile.aiCredits > 0 ? 'GENERATE AI PLAN' : 'OUT OF CREDITS'),
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      letterSpacing: 1.2,
+                      color: Colors.white,
+                    ),
+                  ),
+                ],
               ),
             ),
+            if (profile.subscriptionTier == 'free') ...[
+              const SizedBox(height: 12),
+              GestureDetector(
+                onTap: () => _showPremiumPaywall(context),
+                child: const Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.lock, color: Colors.grey, size: 16),
+                    SizedBox(width: 4),
+                    Text('Unlock dynamic AI plans with Premium', style: TextStyle(color: Colors.grey, decoration: TextDecoration.underline)),
+                  ],
+                ),
+              )
+            ],
             loading: () => const Center(child: CircularProgressIndicator()),
             error: (_, __) => const Center(child: Text('Failed to load profile', style: TextStyle(color: Colors.red))),
           ),

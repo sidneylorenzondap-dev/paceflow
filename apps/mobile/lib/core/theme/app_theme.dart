@@ -2,11 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class AppTheme {
-  static const Color primaryColor = Color(0xFFE0FF00); // Neon Green/Yellow
-  static const Color backgroundColor = Color(0xFF0A0A0A);
-  static const Color surfaceColor = Color(0xFF1A1A1A);
-  static const Color onBackgroundColor = Colors.white;
-  static const Color accentColor = Color(0xFFFF0055); // Neon Pink/Red
+  // Neo-Brutalist Colors
+  static const Color primaryColor = Color(0xFFCCFF00); // Neon Yellow-Green
+  static const Color backgroundColor = Color(0xFF0E0E10); // Dark Background
+  static const Color surfaceColor = Color(0xFF18181C); // Card Background
+  static const Color onBackgroundColor = Colors.white; // White text
+  static const Color secondaryTextColor = Color(0xFF8E8E93); // Grey text
+  static const Color accentColor = Color(0xFFFC4C02); // Bright Orange
+  static const Color brutalistBorder = Colors.black; // Heavy strokes
 
   static ThemeData get darkTheme {
     return ThemeData(
@@ -21,23 +24,23 @@ class AppTheme {
         onBackground: onBackgroundColor,
         secondary: accentColor,
       ),
-      textTheme: GoogleFonts.interTextTheme(
+      textTheme: GoogleFonts.geistTextTheme(
         ThemeData(brightness: Brightness.dark).textTheme,
       ).copyWith(
-        displayLarge: GoogleFonts.outfit(
-          fontWeight: FontWeight.bold,
+        displayLarge: GoogleFonts.unbounded(
+          fontWeight: FontWeight.w900, // Black
           color: onBackgroundColor,
         ),
-        displayMedium: GoogleFonts.outfit(
-          fontWeight: FontWeight.bold,
+        displayMedium: GoogleFonts.unbounded(
+          fontWeight: FontWeight.w900, // Black
           color: onBackgroundColor,
         ),
-        headlineLarge: GoogleFonts.outfit(
-          fontWeight: FontWeight.w700,
+        headlineLarge: GoogleFonts.unbounded(
+          fontWeight: FontWeight.w800, // ExtraBold
           color: onBackgroundColor,
         ),
-        titleLarge: GoogleFonts.outfit(
-          fontWeight: FontWeight.w600,
+        titleLarge: GoogleFonts.unbounded(
+          fontWeight: FontWeight.w800, // ExtraBold
           color: onBackgroundColor,
         ),
       ),
@@ -51,13 +54,15 @@ class AppTheme {
           backgroundColor: primaryColor,
           foregroundColor: Colors.black,
           padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 32),
-          textStyle: GoogleFonts.outfit(
-            fontWeight: FontWeight.bold,
+          textStyle: GoogleFonts.unbounded(
+            fontWeight: FontWeight.w900,
             fontSize: 16,
           ),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(8),
+            side: const BorderSide(color: Colors.black, width: 2), // Brutalist button border
           ),
+          elevation: 0, // Shadows handled manually by NeoBrutalist container
         ),
       ),
     );
