@@ -78,6 +78,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   @override
   Widget build(BuildContext context) {
+    return ResponsiveLayout(
+      mobile: _buildMobileScaffold(context),
+      desktop: _buildDesktopScaffold(context),
+    );
+  }
+
+  Widget _buildMobileScaffold(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: const Text('PACEFLOW'),
