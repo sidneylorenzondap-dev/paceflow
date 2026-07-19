@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../data/ble_service.dart';
 import '../../../core/ui/neo_brutalist_container.dart';
 import '../../../core/ui/responsive_layout.dart';
+import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 
 class DeviceScannerScreen extends ConsumerStatefulWidget {
   const DeviceScannerScreen({super.key});
@@ -54,7 +55,19 @@ class _DeviceScannerScreenState extends ConsumerState<DeviceScannerScreen> {
       children: [
         _buildMobileHeader(context),
         Expanded(
-          child: _buildScannerContent(isMobile: true),
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(24.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                _buildRadarOverview(),
+                const SizedBox(height: 32),
+                _buildHardwareListHeader(),
+                const SizedBox(height: 16),
+                _buildHardwareList(),
+              ],
+            ),
+          ),
         ),
       ],
     );
@@ -62,41 +75,21 @@ class _DeviceScannerScreenState extends ConsumerState<DeviceScannerScreen> {
 
   Widget _buildMobileHeader(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
       decoration: const BoxDecoration(
-        color: Color(0xFF18181C),
-        border: Border(bottom: BorderSide(color: Colors.black, width: 3)),
+        color: Color(0xFF0E0E10),
       ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      child: const Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          GestureDetector(
-            onTap: () {
-              if (context.canPop()) {
-                context.pop();
-              } else {
-                context.go('/dashboard');
-              }
-            },
-            child: Row(
-              children: [
-                const Icon(Icons.chevron_left, color: Color(0xFFFC4C02), size: 24),
-                const SizedBox(width: 4),
-                const Text(
-                  'DASHBOARD',
-                  style: TextStyle(color: Color(0xFFFC4C02), fontFamily: 'Unbounded', fontWeight: FontWeight.w900, fontSize: 12),
-                ),
-              ],
-            ),
+          Text(
+            'HARDWARE SETUP',
+            style: TextStyle(color: Color(0xFFFC4C02), fontFamily: 'Unbounded', fontWeight: FontWeight.w900, fontSize: 11),
           ),
-          const Text(
+          SizedBox(height: 4),
+          Text(
             'DEVICE SCANNER',
-            style: TextStyle(
-              color: Colors.white,
-              fontFamily: 'Unbounded',
-              fontWeight: FontWeight.w900,
-              fontSize: 14,
-            ),
+            style: TextStyle(color: Colors.white, fontFamily: 'Unbounded', fontWeight: FontWeight.w900, fontSize: 32),
           ),
         ],
       ),
@@ -119,16 +112,69 @@ class _DeviceScannerScreenState extends ConsumerState<DeviceScannerScreen> {
                 _buildDesktopHeader(context),
                 const SizedBox(height: 32),
                 Expanded(
-                  child: Center(
-                    child: ConstrainedBox(
-                      constraints: const BoxConstraints(maxWidth: 800),
-                      child: _buildScannerContent(isMobile: false),
-                    ),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      // Left Column: Radar Overview
+                      Expanded(
+                        flex: 6,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            const Text(
+                              'LIVE TELEMETRY',
+                              style: TextStyle(color: Color(0xFFFC4C02), fontFamily: 'Unbounded', fontWeight: FontWeight.w900, fontSize: 10),
+                            ),
+                            const SizedBox(height: 4),
+                            const Text(
+                              'RADAR OVERVIEW',
+                              style: TextStyle(color: Colors.white, fontFamily: 'Unbounded', fontWeight: FontWeight.w900, fontSize: 20),
+                            ),
+                            const SizedBox(height: 16),
+                            Expanded(child: _buildRadarOverview()),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(width: 40),
+                      // Right Column: Hardware List
+                      Expanded(
+                        flex: 5,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            _buildHardwareListHeader(),
+                            const SizedBox(height: 16),
+                            Expanded(
+                              child: SingleChildScrollView(
+                                child: _buildHardwareList(),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ],
             ),
           ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildDesktopHeader(BuildContext context) {
+    return const Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'HARDWARE SETUP',
+          style: TextStyle(color: Color(0xFFFC4C02), fontFamily: 'Unbounded', fontWeight: FontWeight.w900, fontSize: 11),
+        ),
+        SizedBox(height: 4),
+        Text(
+          'DEVICE SCANNER',
+          style: TextStyle(color: Colors.white, fontFamily: 'Unbounded', fontWeight: FontWeight.w900, fontSize: 32),
         ),
       ],
     );
@@ -160,11 +206,11 @@ class _DeviceScannerScreenState extends ConsumerState<DeviceScannerScreen> {
             ],
           ),
           const SizedBox(height: 48),
-          _buildDesktopSidebarItem(context, Icons.crop_square, 'DASHBOARD', '/dashboard', true),
+          _buildDesktopSidebarItem(context, Icons.crop_square, 'DASHBOARD', '/dashboard', false),
           const SizedBox(height: 16),
           _buildDesktopSidebarItem(context, Icons.crop_square, 'PLAN', '/training', false),
           const SizedBox(height: 16),
-          _buildDesktopSidebarItem(context, Icons.circle, 'LIVE RUN', '/dashboard', false, iconSize: 10),
+          _buildDesktopSidebarItem(context, Icons.circle, 'LIVE RUN', '/dashboard', true, iconSize: 10),
           const Spacer(),
           Container(
             padding: const EdgeInsets.all(16),
@@ -218,213 +264,282 @@ class _DeviceScannerScreenState extends ConsumerState<DeviceScannerScreen> {
     );
   }
 
-  Widget _buildDesktopHeader(BuildContext context) {
-    return Row(
-      children: [
-        GestureDetector(
-          onTap: () => context.go('/dashboard'),
-          child: const Text(
-            '< DASHBOARD',
-            style: TextStyle(color: Color(0xFFFC4C02), fontFamily: 'Unbounded', fontWeight: FontWeight.w900, fontSize: 14),
-          ),
-        ),
-        const SizedBox(width: 24),
-        const Text(
-          'DEVICE SCANNER',
-          style: TextStyle(color: Colors.white, fontFamily: 'Unbounded', fontWeight: FontWeight.w900, fontSize: 24),
-        ),
-      ],
-    );
-  }
-
   // --- CONTENT BUILDER ---
 
-  Widget _buildScannerContent({required bool isMobile}) {
-    if (kIsWeb) {
-      return Center(
-        child: Container(
-          margin: const EdgeInsets.all(24),
-          padding: const EdgeInsets.all(32),
-          decoration: BoxDecoration(
-            color: const Color(0xFF18181C),
-            border: Border.all(color: const Color(0xFFFC4C02), width: 4),
-            boxShadow: const [BoxShadow(color: Color(0xFFFC4C02), offset: Offset(8, 8))],
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Icon(Icons.bluetooth_disabled_rounded, size: 64, color: Color(0xFFFC4C02)),
-              const SizedBox(height: 24),
-              Text(
-                'NOT SUPPORTED ON WEB',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontFamily: 'Unbounded',
-                  fontWeight: FontWeight.w900,
-                  fontSize: isMobile ? 18 : 24,
-                ),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 16),
-              const Text(
-                'Bluetooth Heart Rate Monitors can only be connected when running Paceflow as a native Android or iOS app.',
-                textAlign: TextAlign.center,
-                style: TextStyle(color: Color(0xFF8E8E93), fontFamily: 'Geist', fontSize: 16, height: 1.5),
-              ),
-            ],
-          ),
-        ),
-      );
-    }
-
-    final state = ref.watch(bleProvider);
-    final notifier = ref.read(bleProvider.notifier);
-
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(24.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
+  Widget _buildRadarOverview() {
+    return Container(
+      constraints: const BoxConstraints(minHeight: 250),
+      decoration: BoxDecoration(
+        color: const Color(0xFF18181C), // Slightly lighter than background
+        border: Border.all(color: Colors.black, width: 3),
+        boxShadow: const [BoxShadow(color: Colors.black, offset: Offset(4, 4))],
+      ),
+      child: Stack(
         children: [
-          const Text(
-            'PAIR YOUR SENSOR',
-            style: TextStyle(color: Colors.white, fontFamily: 'Unbounded', fontWeight: FontWeight.w900, fontSize: 32),
-          ),
-          const SizedBox(height: 8),
-          const Text(
-            'Supported Devices: Bluetooth Heart Rate Monitors, Footpods.',
-            style: TextStyle(color: Color(0xFF8E8E93), fontFamily: 'Geist', fontSize: 16),
-          ),
-          const SizedBox(height: 32),
-          
-          if (state.connectedDevice != null) ...[
-            const Text('CONNECTED', style: TextStyle(color: Color(0xFFCCFF00), fontFamily: 'Unbounded', fontWeight: FontWeight.w900, fontSize: 14)),
-            const SizedBox(height: 12),
-            NeoBrutalistContainer(
-              backgroundColor: const Color(0xFF18181C),
-              shadowColor: const Color(0xFFCCFF00),
-              padding: const EdgeInsets.all(20),
-              child: Row(
-                children: [
-                  const Icon(Icons.favorite, color: Color(0xFFFC4C02), size: 32),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          state.connectedDevice!.platformName.toUpperCase(),
-                          style: const TextStyle(color: Colors.white, fontFamily: 'Unbounded', fontWeight: FontWeight.w900, fontSize: 20),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          '${state.currentHeartRate} BPM',
-                          style: const TextStyle(color: Color(0xFFCCFF00), fontFamily: 'Geist', fontWeight: FontWeight.bold, fontSize: 16),
-                        ),
-                      ],
-                    ),
-                  ),
-                  GestureDetector(
-                    onTap: () => notifier.disconnect(),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        border: Border.all(color: Colors.black, width: 2),
-                      ),
-                      child: const Text('DISCONNECT', style: TextStyle(color: Colors.black, fontFamily: 'Unbounded', fontWeight: FontWeight.w900, fontSize: 12)),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 40),
-          ],
-          
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          // The background grid lines
+          Column(
             children: [
-              const Text('DISCOVERED DEVICES', style: TextStyle(color: Colors.white, fontFamily: 'Unbounded', fontWeight: FontWeight.w900, fontSize: 14)),
-              if (state.isScanning)
-                const SizedBox(
-                  width: 16,
-                  height: 16,
-                  child: CircularProgressIndicator(strokeWidth: 2, color: Color(0xFFCCFF00)),
-                )
-              else
-                GestureDetector(
-                  onTap: () => notifier.startScan(),
-                  child: const Icon(Icons.refresh, color: Color(0xFFCCFF00), size: 24),
-                ),
+              Expanded(child: Container(decoration: const BoxDecoration(border: Border(bottom: BorderSide(color: Color(0xFF2C2C2E), width: 1))))),
+              Expanded(child: Container(decoration: const BoxDecoration(border: Border(bottom: BorderSide(color: Color(0xFF2C2C2E), width: 1))))),
+              Expanded(child: Container()),
             ],
           ),
-          const SizedBox(height: 16),
-          
-          if (state.scanResults.isEmpty && !state.isScanning)
-            Container(
-              padding: const EdgeInsets.all(24),
-              decoration: BoxDecoration(
-                border: Border.all(color: const Color(0xFF8E8E93), width: 2),
-                color: Colors.transparent,
-              ),
-              child: const Text(
-                'NO DEVICES FOUND',
-                textAlign: TextAlign.center,
-                style: TextStyle(color: Color(0xFF8E8E93), fontFamily: 'Unbounded', fontWeight: FontWeight.bold, fontSize: 14),
-              ),
-            )
-          else
-            ListView.separated(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              itemCount: state.scanResults.length,
-              separatorBuilder: (context, index) => const SizedBox(height: 12),
-              itemBuilder: (context, index) {
-                final result = state.scanResults[index];
-                if (state.connectedDevice?.remoteId == result.device.remoteId) {
-                  return const SizedBox.shrink();
-                }
-                
-                return NeoBrutalistContainer(
-                  backgroundColor: Colors.white,
-                  shadowColor: Colors.black,
-                  padding: const EdgeInsets.all(16),
-                  child: Row(
-                    children: [
-                      const Icon(Icons.bluetooth, color: Colors.black, size: 24),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              result.device.platformName.isEmpty ? 'UNKNOWN DEVICE' : result.device.platformName.toUpperCase(),
-                              style: const TextStyle(color: Colors.black, fontFamily: 'Unbounded', fontWeight: FontWeight.w900, fontSize: 16),
-                            ),
-                            Text(
-                              result.device.remoteId.toString(),
-                              style: const TextStyle(color: Colors.black54, fontFamily: 'Geist', fontSize: 12),
-                            ),
-                          ],
-                        ),
-                      ),
-                      GestureDetector(
-                        onTap: () => notifier.connectToDevice(result.device),
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFFCCFF00),
-                            border: Border.all(color: Colors.black, width: 2),
-                          ),
-                          child: const Text('CONNECT', style: TextStyle(color: Colors.black, fontFamily: 'Unbounded', fontWeight: FontWeight.w900, fontSize: 12)),
-                        ),
-                      ),
-                    ],
-                  ),
-                );
-              },
+          // Custom radar graphics
+          Positioned.fill(
+            child: CustomPaint(
+              painter: RadarPainter(),
             ),
+          ),
+          // The Top Left Badge
+          Positioned(
+            top: 24,
+            left: 24,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              decoration: BoxDecoration(
+                color: const Color(0xFF18181C),
+                border: Border.all(color: Colors.black, width: 2),
+              ),
+              child: const Text('BLUETOOTH RX ACTIVE //', style: TextStyle(color: Color(0xFFCCFF00), fontFamily: 'Unbounded', fontWeight: FontWeight.w900, fontSize: 10)),
+            ),
+          ),
         ],
       ),
     );
   }
+
+  Widget _buildHardwareListHeader() {
+    final state = ref.watch(bleProvider);
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        const Text(
+          'DISCOVERED HARDWARE',
+          style: TextStyle(color: Colors.white, fontFamily: 'Unbounded', fontWeight: FontWeight.w900, fontSize: 14),
+        ),
+        if (state.isScanning && !kIsWeb)
+          const SizedBox(
+            width: 16,
+            height: 16,
+            child: CircularProgressIndicator(strokeWidth: 2, color: Color(0xFFCCFF00)),
+          ),
+      ],
+    );
+  }
+
+  Widget _buildHardwareList() {
+    final state = ref.watch(bleProvider);
+    final notifier = ref.read(bleProvider.notifier);
+
+    // MOCK DATA for Web or if no devices found
+    if (kIsWeb || (state.scanResults.isEmpty && !state.isScanning)) {
+      return Column(
+        children: [
+          _buildDeviceCard(
+            name: 'POLAR H10',
+            mac: '00:22:A3:89:C1:2F',
+            badgeText: 'HR MONITOR',
+            rssiText: 'RSSI: STRONG',
+            isConnected: true,
+            onTap: () {}, // Mock
+          ),
+          const SizedBox(height: 16),
+          _buildDeviceCard(
+            name: 'STRYD POD',
+            mac: '00:88:F2:A3:BC:11',
+            badgeText: 'POWER METRIC',
+            rssiText: 'RSSI: STABLE',
+            isConnected: false,
+            onTap: () {}, // Mock
+          ),
+          const SizedBox(height: 16),
+          _buildDeviceCard(
+            name: 'COROS PACE 3',
+            mac: '14:AA:2F:3C:D9:AA',
+            badgeText: 'SPORTS WATCH',
+            rssiText: 'RSSI: WEAK',
+            isConnected: false,
+            onTap: () {}, // Mock
+          ),
+        ],
+      );
+    }
+
+    // REAL DATA
+    return ListView.separated(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      itemCount: state.scanResults.length,
+      separatorBuilder: (context, index) => const SizedBox(height: 16),
+      itemBuilder: (context, index) {
+        final result = state.scanResults[index];
+        final isConnected = state.connectedDevice?.remoteId == result.device.remoteId;
+        
+        return _buildDeviceCard(
+          name: result.device.platformName.isEmpty ? 'UNKNOWN DEVICE' : result.device.platformName.toUpperCase(),
+          mac: result.device.remoteId.toString(),
+          badgeText: 'BLUETOOTH LE', // Generic badge for real unknown devices
+          rssiText: 'RSSI: ${result.rssi}',
+          isConnected: isConnected,
+          onTap: () {
+            if (isConnected) {
+              notifier.disconnect();
+            } else {
+              notifier.connectToDevice(result.device);
+            }
+          },
+        );
+      },
+    );
+  }
+
+  Widget _buildDeviceCard({
+    required String name,
+    required String mac,
+    required String badgeText,
+    required String rssiText,
+    required bool isConnected,
+    required VoidCallback onTap,
+  }) {
+    return Container(
+      decoration: BoxDecoration(
+        color: const Color(0xFF18181C),
+        border: Border.all(color: Colors.black, width: 3),
+      ),
+      padding: const EdgeInsets.all(24),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      name,
+                      style: const TextStyle(color: Colors.white, fontFamily: 'Unbounded', fontWeight: FontWeight.w900, fontSize: 18),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'MAC: $mac',
+                      style: const TextStyle(color: Color(0xFF8E8E93), fontFamily: 'Geist', fontSize: 11),
+                    ),
+                  ],
+                ),
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF18181C),
+                  border: Border.all(color: const Color(0xFFCCFF00), width: 1.5),
+                ),
+                child: Text(badgeText, style: const TextStyle(color: Color(0xFFCCFF00), fontFamily: 'Unbounded', fontWeight: FontWeight.w900, fontSize: 9)),
+              ),
+            ],
+          ),
+          const SizedBox(height: 24),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Text(
+                rssiText,
+                style: const TextStyle(color: Color(0xFF8E8E93), fontFamily: 'Geist', fontSize: 11, fontWeight: FontWeight.bold),
+              ),
+              GestureDetector(
+                onTap: onTap,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: isConnected ? const Color(0xFFCCFF00) : const Color(0xFF18181C),
+                    border: Border.all(color: Colors.black, width: 2),
+                    boxShadow: !isConnected ? const [BoxShadow(color: Colors.black, offset: Offset(3, 3))] : [],
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      if (isConnected) ...[
+                        const Icon(Icons.circle, color: Colors.black, size: 8),
+                        const SizedBox(width: 6),
+                      ],
+                      Text(
+                        isConnected ? 'CONNECTED' : 'CONNECT',
+                        style: TextStyle(
+                          color: isConnected ? Colors.black : Colors.white,
+                          fontFamily: 'Unbounded',
+                          fontWeight: FontWeight.w900,
+                          fontSize: 10,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class RadarPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    // Olive/neon green lines mimicking a radar scan
+    final paintLine1 = Paint()
+      ..color = const Color(0xFFCCFF00) // Neon Green
+      ..strokeWidth = 2
+      ..style = PaintingStyle.stroke;
+
+    final paintLine2 = Paint()
+      ..color = const Color(0xFF8A9A5B) // Olive Green
+      ..strokeWidth = 2
+      ..style = PaintingStyle.stroke;
+
+    final paintCircleOrange = Paint()
+      ..color = const Color(0xFFFC4C02)
+      ..strokeWidth = 2
+      ..style = PaintingStyle.stroke;
+
+    final paintCircleGreen = Paint()
+      ..color = const Color(0xFFCCFF00)
+      ..strokeWidth = 2
+      ..style = PaintingStyle.stroke;
+
+    // Draw lines
+    canvas.drawLine(
+      Offset(size.width * 0.1, size.height * 0.9), 
+      Offset(size.width * 0.9, size.height * 0.1), 
+      paintLine2
+    );
+
+    canvas.drawLine(
+      Offset(size.width * 0.4, size.height * 0.5), 
+      Offset(size.width * 0.85, size.height * 0.8), 
+      paintLine1
+    );
+    
+    canvas.drawLine(
+      Offset(size.width * 0.1, size.height * 0.9), 
+      Offset(size.width * 0.4, size.height * 0.5), 
+      paintLine2
+    );
+
+    canvas.drawLine(
+      Offset(size.width * 0.45, size.height * 0.1), 
+      Offset(size.width * 0.35, size.height * 1.0), 
+      paintLine1
+    );
+
+    // Draw circles (devices)
+    canvas.drawCircle(Offset(size.width * 0.28, size.height * 0.65), 10, paintCircleOrange);
+    canvas.drawCircle(Offset(size.width * 0.7, size.height * 0.3), 10, paintCircleGreen);
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }

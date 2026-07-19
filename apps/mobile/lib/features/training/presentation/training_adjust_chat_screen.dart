@@ -16,7 +16,22 @@ class _TrainingAdjustChatScreenState extends State<TrainingAdjustChatScreen> {
   final TrainingService _service = TrainingService();
   final TextEditingController _controller = TextEditingController();
   final List<Map<String, String>> _messages = [
-    {'role': 'system', 'text': 'Hi! I am your AI running coach. How should we adjust your plan today? (e.g. "I am sick, make today a rest day")'}
+    {
+      'role': 'system', 
+      'text': "Paceflow engine flags minor heart strain from your Tuesday thresholds. Should we optimize tomorrow's speed work?"
+    },
+    {
+      'role': 'user', 
+      'text': "Let's optimize it. I slept well but my legs still feel quite heavy."
+    },
+    {
+      'role': 'system', 
+      'text': "Understood. I've adjusted Wednesday's intervals: 6x 400m instead of 8x. Keeps your performance load at high efficiency."
+    },
+    {
+      'role': 'user', 
+      'text': "Awesome, let's lock that modified speed plan in."
+    },
   ];
   bool _isLoading = false;
   final ScrollController _scrollController = ScrollController();
@@ -32,18 +47,15 @@ class _TrainingAdjustChatScreenState extends State<TrainingAdjustChatScreen> {
     _controller.clear();
     _scrollToBottom();
 
-    final response = await _service.adjustTrainingPlan(text);
+    // Mock response for visual prototype
+    await Future.delayed(const Duration(seconds: 1));
 
     setState(() {
       _isLoading = false;
-      if (response.errorMessage != null) {
-        _messages.add({'role': 'system', 'text': response.errorMessage!});
-      } else {
-        _messages.add({
-          'role': 'system', 
-          'text': 'Your training plan has been updated successfully! Check your calendar to see the changes.'
-        });
-      }
+      _messages.add({
+        'role': 'system', 
+        'text': 'Processing your request... Your plan has been dynamically updated.'
+      });
     });
     _scrollToBottom();
   }
@@ -80,7 +92,7 @@ class _TrainingAdjustChatScreenState extends State<TrainingAdjustChatScreen> {
       children: [
         _buildMobileHeader(context),
         Expanded(child: _buildChatList()),
-        _buildInputArea(),
+        _buildInputArea(isMobile: true),
       ],
     );
   }
@@ -89,11 +101,10 @@ class _TrainingAdjustChatScreenState extends State<TrainingAdjustChatScreen> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
       decoration: const BoxDecoration(
-        color: Color(0xFF18181C),
-        border: Border(bottom: BorderSide(color: Colors.black, width: 3)),
+        color: Color(0xFF0E0E10),
       ),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           GestureDetector(
             onTap: () {
@@ -103,25 +114,39 @@ class _TrainingAdjustChatScreenState extends State<TrainingAdjustChatScreen> {
                 context.go('/training');
               }
             },
-            child: Row(
-              children: [
-                const Icon(Icons.chevron_left, color: Color(0xFFFC4C02), size: 24),
-                const SizedBox(width: 4),
-                const Text(
-                  'BACK',
-                  style: TextStyle(color: Color(0xFFFC4C02), fontFamily: 'Unbounded', fontWeight: FontWeight.w900, fontSize: 12),
-                ),
-              ],
+            child: Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: const Color(0xFFFC4C02), // Orange
+                border: Border.all(color: Colors.black, width: 2),
+              ),
+              child: const Icon(Icons.star_border, color: Colors.white, size: 20),
             ),
           ),
-          const Text(
-            'PACEFLOW AI COACH',
-            style: TextStyle(
-              color: Colors.white,
-              fontFamily: 'Unbounded',
-              fontWeight: FontWeight.w900,
-              fontSize: 14,
-            ),
+          const SizedBox(width: 16),
+          const Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'AI COACH',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontFamily: 'Unbounded',
+                  fontWeight: FontWeight.w900,
+                  fontSize: 20,
+                ),
+              ),
+              SizedBox(height: 2),
+              Text(
+                'PACEFLOW ENGINE v2.1 ACTIVE',
+                style: TextStyle(
+                  color: Color(0xFFCCFF00),
+                  fontFamily: 'Unbounded',
+                  fontWeight: FontWeight.w900,
+                  fontSize: 10,
+                ),
+              ),
+            ],
           ),
         ],
       ),
@@ -144,29 +169,64 @@ class _TrainingAdjustChatScreenState extends State<TrainingAdjustChatScreen> {
                 _buildDesktopHeader(context),
                 const SizedBox(height: 32),
                 Expanded(
-                  child: Center(
-                    child: ConstrainedBox(
-                      constraints: const BoxConstraints(maxWidth: 700),
-                      child: Column(
-                        children: [
-                          Expanded(
-                            child: Container(
-                              decoration: BoxDecoration(
-                                color: const Color(0xFF18181C).withOpacity(0.5),
-                                border: Border.all(color: Colors.black, width: 3),
-                              ),
-                              child: _buildChatList(),
-                            ),
-                          ),
-                          _buildInputArea(),
-                        ],
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      // Left Column: Chat
+                      Expanded(
+                        flex: 5,
+                        child: Column(
+                          children: [
+                            Expanded(child: _buildChatList()),
+                            _buildInputArea(isMobile: false),
+                          ],
+                        ),
                       ),
-                    ),
+                      const SizedBox(width: 40),
+                      // Right Column: Active Plan Context
+                      Expanded(
+                        flex: 4,
+                        child: _buildDesktopContextPanel(),
+                      ),
+                    ],
                   ),
                 ),
               ],
             ),
           ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildDesktopHeader(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'AI WORKOUT ADVICE',
+          style: TextStyle(color: Color(0xFFFC4C02), fontFamily: 'Unbounded', fontWeight: FontWeight.w900, fontSize: 14),
+        ),
+        const SizedBox(height: 8),
+        Row(
+          children: [
+            const Text(
+              'AI COACH DIRECT',
+              style: TextStyle(color: Colors.white, fontFamily: 'Unbounded', fontWeight: FontWeight.w900, fontSize: 40),
+            ),
+            const SizedBox(width: 16),
+            GestureDetector(
+              onTap: () => context.go('/training'),
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF18181C),
+                  border: Border.all(color: Colors.black, width: 2),
+                ),
+                child: const Text('BACK TO PLAN', style: TextStyle(color: Colors.white, fontFamily: 'Unbounded', fontWeight: FontWeight.w900, fontSize: 10)),
+              ),
+            ),
+          ],
         ),
       ],
     );
@@ -256,33 +316,52 @@ class _TrainingAdjustChatScreenState extends State<TrainingAdjustChatScreen> {
     );
   }
 
-  Widget _buildDesktopHeader(BuildContext context) {
-    return Row(
-      children: [
-        GestureDetector(
-          onTap: () => context.go('/training'),
-          child: const Text(
-            '< PLAN',
-            style: TextStyle(color: Color(0xFFFC4C02), fontFamily: 'Unbounded', fontWeight: FontWeight.w900, fontSize: 14),
-          ),
-        ),
-        const SizedBox(width: 24),
-        const Text(
-          'PACEFLOW AI COACH',
-          style: TextStyle(color: Colors.white, fontFamily: 'Unbounded', fontWeight: FontWeight.w900, fontSize: 24),
-        ),
-      ],
+  Widget _buildDesktopContextPanel() {
+    return Container(
+      padding: const EdgeInsets.all(32),
+      decoration: BoxDecoration(
+        color: const Color(0xFF18181C),
+        border: Border.all(color: Colors.black, width: 3),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text('ACTIVE PLAN CONTEXT', style: TextStyle(color: Color(0xFFFC4C02), fontFamily: 'Unbounded', fontWeight: FontWeight.w900, fontSize: 11)),
+          const SizedBox(height: 8),
+          const Text('SUB-45 10K SPEED', style: TextStyle(color: Colors.white, fontFamily: 'Unbounded', fontWeight: FontWeight.w900, fontSize: 24)),
+          
+          const SizedBox(height: 32),
+          
+          const Text('CURRENT WORKOUT LOAD', style: TextStyle(color: Color(0xFF8E8E93), fontFamily: 'Unbounded', fontWeight: FontWeight.w900, fontSize: 10)),
+          const SizedBox(height: 8),
+          const Text('Week 3 // 62% Done', style: TextStyle(color: Color(0xFFCCFF00), fontFamily: 'Unbounded', fontWeight: FontWeight.w900, fontSize: 20)),
+          
+          const SizedBox(height: 48),
+          
+          const Text('PLAN ADJUSTMENTS', style: TextStyle(color: Color(0xFF8E8E93), fontFamily: 'Unbounded', fontWeight: FontWeight.w900, fontSize: 10)),
+          const SizedBox(height: 16),
+          
+          const Text('INTERVAL MODIFICATION', style: TextStyle(color: Colors.white, fontFamily: 'Unbounded', fontWeight: FontWeight.w900, fontSize: 12)),
+          const SizedBox(height: 4),
+          const Text('Reduced volume to 6x400m to mitigate muscle fatigue.', style: TextStyle(color: Color(0xFF8E8E93), fontFamily: 'Geist', fontSize: 13, height: 1.4)),
+          
+          const SizedBox(height: 24),
+          
+          const Text('RECOVERY PACE EXPANSION', style: TextStyle(color: Colors.white, fontFamily: 'Unbounded', fontWeight: FontWeight.w900, fontSize: 12)),
+          const SizedBox(height: 4),
+          const Text('Target slow runs relaxed at 5:45/km rather than 5:30/km.', style: TextStyle(color: Color(0xFF8E8E93), fontFamily: 'Geist', fontSize: 13, height: 1.4)),
+        ],
+      ),
     );
   }
 
   // --- CONTENT BUILDER ---
 
   Widget _buildChatList() {
-    return ListView.separated(
+    return ListView.builder(
       controller: _scrollController,
-      padding: const EdgeInsets.all(24.0),
+      padding: const EdgeInsets.only(left: 20, right: 20, top: 16, bottom: 24),
       itemCount: _messages.length,
-      separatorBuilder: (context, index) => const SizedBox(height: 16),
       itemBuilder: (context, index) {
         final msg = _messages[index];
         final isUser = msg['role'] == 'user';
@@ -290,40 +369,28 @@ class _TrainingAdjustChatScreenState extends State<TrainingAdjustChatScreen> {
         return Align(
           alignment: isUser ? Alignment.centerRight : Alignment.centerLeft,
           child: ConstrainedBox(
-            constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.75),
-            child: Column(
-              crossAxisAlignment: isUser ? CrossAxisAlignment.end : CrossAxisAlignment.start,
-              children: [
-                if (!isUser) ...[
-                  Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Icon(Icons.psychology, color: Color(0xFFCCFF00), size: 16),
-                      const SizedBox(width: 4),
-                      const Text('PF AI COACH', style: TextStyle(color: Color(0xFF8E8E93), fontFamily: 'Unbounded', fontWeight: FontWeight.w900, fontSize: 10)),
-                    ],
-                  ),
-                  const SizedBox(height: 8),
-                ],
-                Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: isUser ? const Color(0xFFCCFF00) : const Color(0xFF18181C),
-                    border: Border.all(color: Colors.black, width: 3),
-                    boxShadow: const [BoxShadow(color: Colors.black, offset: Offset(4, 4))],
-                  ),
-                  child: Text(
-                    msg['text']!,
-                    style: TextStyle(
-                      color: isUser ? Colors.black : Colors.white,
-                      fontFamily: 'Geist',
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16,
-                      height: 1.4,
-                    ),
+            constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.7),
+            child: Padding(
+              padding: const EdgeInsets.only(bottom: 24.0),
+              child: Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: isUser ? const Color(0xFFCCFF00) : const Color(0xFF18181C),
+                  border: isUser 
+                    ? Border.all(color: Colors.black, width: 3)
+                    : Border.all(color: const Color(0xFFCCFF00), width: 3),
+                ),
+                child: Text(
+                  msg['text']!,
+                  style: TextStyle(
+                    color: isUser ? Colors.black : Colors.white,
+                    fontFamily: 'Geist',
+                    fontWeight: FontWeight.w500,
+                    fontSize: 14,
+                    height: 1.5,
                   ),
                 ),
-              ],
+              ),
             ),
           ),
         );
@@ -331,9 +398,9 @@ class _TrainingAdjustChatScreenState extends State<TrainingAdjustChatScreen> {
     );
   }
 
-  Widget _buildInputArea() {
+  Widget _buildInputArea({required bool isMobile}) {
     return Container(
-      padding: const EdgeInsets.all(16.0),
+      padding: EdgeInsets.symmetric(horizontal: isMobile ? 20 : 0, vertical: 16),
       decoration: const BoxDecoration(
         color: Color(0xFF0E0E10),
       ),
@@ -349,34 +416,32 @@ class _TrainingAdjustChatScreenState extends State<TrainingAdjustChatScreen> {
               Expanded(
                 child: Container(
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: const Color(0xFF2C2C2E), // Dark input background
                     border: Border.all(color: Colors.black, width: 3),
-                    boxShadow: const [BoxShadow(color: Colors.black, offset: Offset(4, 4))],
                   ),
                   child: TextField(
                     controller: _controller,
-                    style: const TextStyle(color: Colors.black, fontFamily: 'Geist', fontWeight: FontWeight.bold),
-                    decoration: const InputDecoration(
-                      hintText: 'E.g., Move my long run to Sunday...',
-                      hintStyle: TextStyle(color: Colors.black54, fontFamily: 'Geist', fontWeight: FontWeight.bold),
+                    style: const TextStyle(color: Colors.white, fontFamily: 'Geist', fontSize: 14),
+                    decoration: InputDecoration(
+                      hintText: isMobile ? 'Ask coach about fatigue or sleep...' : 'Ask coach about fatigue, load adjustments or target paces...',
+                      hintStyle: const TextStyle(color: Color(0xFF8E8E93), fontFamily: 'Geist', fontSize: 14),
                       border: InputBorder.none,
-                      contentPadding: EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
                     ),
                     onSubmitted: (_) => _sendMessage(),
                   ),
                 ),
               ),
-              const SizedBox(width: 16),
+              const SizedBox(width: 12),
               GestureDetector(
                 onTap: _sendMessage,
                 child: Container(
-                  padding: const EdgeInsets.all(16),
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
                   decoration: BoxDecoration(
                     color: const Color(0xFFCCFF00),
                     border: Border.all(color: Colors.black, width: 3),
-                    boxShadow: const [BoxShadow(color: Colors.black, offset: Offset(4, 4))],
                   ),
-                  child: const Icon(Icons.arrow_forward_ios, color: Colors.black, size: 20),
+                  child: const Text('SEND', style: TextStyle(color: Colors.black, fontFamily: 'Unbounded', fontWeight: FontWeight.w900, fontSize: 14)),
                 ),
               ),
             ],

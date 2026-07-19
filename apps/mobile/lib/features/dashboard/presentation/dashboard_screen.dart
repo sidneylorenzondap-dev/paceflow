@@ -164,8 +164,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
           index: _currentIndex,
           children: [
             _buildHomeView(),
-            const ActivitiesScreen(),
             const SavedPlansScreen(),
+            Container(), // Placeholder for Live Run to match desktop index
+            const ActivitiesScreen(),
           ],
         ),
       ),
@@ -179,8 +180,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
           mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: [
             _buildNavItem(Icons.home_filled, 'HOME', 0),
-            _buildNavItem(Icons.history, 'ACTIVITIES', 1),
-            _buildNavItem(Icons.event_note, 'PLANS', 2),
+            _buildNavItem(Icons.history, 'ACTIVITIES', 3),
+            _buildNavItem(Icons.event_note, 'PLANS', 1),
           ],
         ),
       ),
